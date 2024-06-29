@@ -1,1 +1,5 @@
-lint-staged
+#!/bin/bash
+
+if [ "$(git branch --no-color --show-current)" = "develop" ]; then
+  lint-staged
+fi
