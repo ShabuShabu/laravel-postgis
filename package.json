@@ -1,0 +1,26 @@
+{
+  "name": "@shabushabu/laravel-postgis",
+  "author": "ShabuShabu - Glumpler GbR",
+  "license": "MIT",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "release": "standard-version",
+    "release:patch": "standard-version --release-as patch",
+    "release:minor": "standard-version --release-as minor",
+    "release:major": "standard-version --release-as major",
+    "prepare": "husky"
+  },
+  "standard-version": {
+    "skip": {
+      "tag": true
+    }
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.3.0",
+    "@commitlint/config-conventional": "^19.2.2",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.4",
+    "standard-version": "^9.5.0"
+  }
+}

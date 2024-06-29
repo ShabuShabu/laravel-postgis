@@ -1,68 +1,133 @@
-# :package_description
+<p align="center"><img src="laravel-postgis.png" alt="PostGIS for Laravel"></p>
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/:vendor_slug/:package_slug.svg?style=flat-square)](https://packagist.org/packages/:vendor_slug/:package_slug)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/:vendor_slug/:package_slug/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/:vendor_slug/:package_slug/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/:vendor_slug/:package_slug/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/:vendor_slug/:package_slug/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/:vendor_slug/:package_slug.svg?style=flat-square)](https://packagist.org/packages/:vendor_slug/:package_slug)
-<!--delete-->
----
-This repo can be used to scaffold a Laravel package. Follow these steps to get started:
+# Laravel PostGIS
 
-1. Press the "Use this template" button at the top of this repo to create a new repo with the contents of this skeleton.
-2. Run "php ./configure.php" to run a script that will replace all placeholders throughout all the files.
-3. Have fun creating your package.
-4. If you need help creating a package, consider picking up our <a href="https://laravelpackage.training">Laravel Package Training</a> video course.
----
-<!--/delete-->
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/shabushabu/laravel-postgis.svg?style=flat-square)](https://packagist.org/packages/shabushabu/laravel-postgis)
+[![Total Downloads](https://img.shields.io/packagist/dt/shabushabu/laravel-postgis.svg?style=flat-square)](https://packagist.org/packages/shabushabu/laravel-postgis)
 
-## Support us
+Select collection of Laravel query expressions for PostGIS.
 
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/:package_name.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/:package_name)
+## Supported minimum versions
 
-We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
-
-We highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using. You'll find our address on [our contact page](https://spatie.be/about-us). We publish all received postcards on [our virtual postcard wall](https://spatie.be/open-source/postcards).
+| PHP | Laravel | PostgreSQL | PostGIS |
+|-----|---------|------------|---------|
+| 8.2 | 11.0    | 16         | 3.4     |
 
 ## Installation
+
+> [!CAUTION]
+> Please note that this is a new package and, even though it is well tested, it should be considered pre-release software
+
+Before installing the package you should install and enable the [PostGIS](https://postgis.net/documentation/getting_started/) extension.
 
 You can install the package via composer:
 
 ```bash
-composer require :vendor_slug/:package_slug
-```
-
-You can publish and run the migrations with:
-
-```bash
-php artisan vendor:publish --tag=":package_slug-migrations"
-php artisan migrate
-```
-
-You can publish the config file with:
-
-```bash
-php artisan vendor:publish --tag=":package_slug-config"
-```
-
-This is the contents of the published config file:
-
-```php
-return [
-];
-```
-
-Optionally, you can publish the views using
-
-```bash
-php artisan vendor:publish --tag=":package_slug-views"
+composer require shabushabu/laravel-postgis
 ```
 
 ## Usage
 
+Please see the [expressions folder](src/Expressions) for a full list of supported PostGIS functions.
+
+We do accept pull requests for any additional functions!
+
+The expressions can be used in queries or in migrations.
+
+### Query examples
+
+#### Getting the GeoJSON representation of a geometry column
+
 ```php
-$variable = new VendorName\Skeleton();
-echo $variable->echoPhrase('Hello, VendorName!');
+use ShabuShabu\PostGIS\Expressions\As;
+use Tpetry\QueryExpressions\Language\Alias;
+use ShabuShabu\PostGIS\Expressions\Enums\Option;
+
+Track::query()
+    ->select(new Alias(new As\GeoJSON('geom', 6, Option::bbox), 'json'))
+    ->where('trail_id', 27)
+    ->value('json');
+```
+
+#### Get an elevation profile from a linestring zm
+
+```php
+use Tpetry\QueryExpressions\Language\Alias;
+use ShabuShabu\PostGIS\Expressions\Collect;
+use ShabuShabu\PostGIS\Expressions\Simplify;
+use ShabuShabu\PostGIS\Expressions\DumpPoints;
+use ShabuShabu\PostGIS\Expressions\Position\Elevation;
+use ShabuShabu\PostGIS\Expressions\Position\Timestamp;
+
+DB::query()->select([
+    new Alias(new Elevation('geom'), 'x'),
+    new Alias(new Timestamp('geom'), 'y'),
+])->from(
+    Track::query()->select(
+        new Alias(new DumpPoints(new Simplify(new Collect('geom'), 0.15)), 'geom')
+    )->where('trail_id', 27), 't'
+);
+```
+
+### Migration examples
+
+#### Adding a generated column from coordinate columns
+
+```php
+use ShabuShabu\PostGIS\Expressions\SetSRID;
+use ShabuShabu\PostGIS\Expressions\Position\MakePoint;
+
+Schema::create('locations', static function (Blueprint $table) {
+    // all the other table columns...
+    
+    $table->decimal('lat', 10, 6)->nullable();
+    $table->decimal('lng', 10, 6)->nullable();
+    $table
+        ->geometry('geom', 'point', 4326)
+        ->storedAs(new SetSRID(new MakePoint('lng', 'lat'), 4326));
+});
+```
+
+#### Setting the center for a given multipolygon
+
+```php
+use ShabuShabu\PostGIS\Expressions\Centroid;
+
+Schema::create('countries', static function (Blueprint $table) {
+    // all the other table columns...
+   
+    $table->geometry('geom', 'multipolygon', 4326);
+    $table
+        ->geometry('center', 'point', 4326)
+        ->storedAs(new Centroid('geom'));
+});
+```
+
+#### Setting the area in square kilometers
+
+```php
+use ShabuShabu\PostGIS\Expressions\Area;
+use Tpetry\QueryExpressions\Value\Value;
+use ShabuShabu\PostGIS\Expressions\Math\Round;
+use ShabuShabu\PostGIS\Expressions\Casts\AsNumeric;
+use ShabuShabu\PostGIS\Expressions\Casts\AsGeography;
+use Tpetry\QueryExpressions\Operator\Arithmetic\Divide;
+
+Schema::create('provinces', static function (Blueprint $table) {
+    // all the other table columns...
+   
+    $table->geometry('geom', 'multipolygon', 4326);
+    $table
+        ->integer('area_km2')
+        ->storedAs(new Round(
+            new AsNumeric(
+                new Divide(
+                    new Area(new AsGeography('geom')),
+                    new Value(1e+6)
+                )
+            )
+        ));
+});
 ```
 
 ## Testing
@@ -85,8 +150,12 @@ Please review [our security policy](../../security/policy) on how to report secu
 
 ## Credits
 
-- [:author_name](https://github.com/:author_username)
+- [Boris Glumpler](https://github.com/boris-glumpler)
 - [All Contributors](../../contributors)
+
+## Disclaimer
+
+This is a 3rd party package and ShabuShabu is not affiliated with either Laravel or PostGIS.
 
 ## License
 
