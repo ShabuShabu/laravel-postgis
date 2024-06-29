@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace ShabuShabu\PostGIS\Console;
 
-use Illuminate\Support\Arr;
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Contracts\Filesystem\Filesystem;
 
 class BackupDatabaseTables extends Command
 {
@@ -36,15 +36,19 @@ class BackupDatabaseTables extends Command
             'country_province',
             'country_sea',
             'country_timezone',
+            'continent_province',
+            'ocean_province',
+            'province_sea',
+            'province_timezone',
         ]);
 
         return match ($context) {
-            'dump'    => $this->dump($tables),
+            'dump' => $this->dump($tables),
             'restore' => $this->restore($tables),
         };
     }
 
-    protected function dump(array|string $tables): int
+    protected function dump(array | string $tables): int
     {
         foreach (Arr::wrap($tables) as $table) {
             $this->dumpTable($table);
@@ -84,7 +88,7 @@ class BackupDatabaseTables extends Command
         }
     }
 
-    protected function restore(array|string $tables): int
+    protected function restore(array | string $tables): int
     {
         foreach (Arr::wrap($tables) as $table) {
             $this->restoreTable($table);
@@ -99,6 +103,7 @@ class BackupDatabaseTables extends Command
 
         if (! $this->disk()->exists($file)) {
             $this->components->error("Backup for table <options=bold>$table</> does not exist");
+
             return;
         }
 

@@ -1,0 +1,44 @@
+#!/bin/bash
+
+GREEN='\x1B[32m\x1B[1m'
+END='\x1B[0m'
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    echo -e "${GREEN}Description:${END}"
+    echo "Creates a database for use in feature/integration tests"
+    echo ""
+    echo -e "${GREEN}Usage:${END}"
+    echo "testdb {database} {user} {password}"
+    echo ""
+    echo  -e "${GREEN}Arguments:${END}"
+    echo "database    The database name, defaults to postgis"
+    echo "user        The user name, defaults to postgis"
+    echo "password    The user password, defaults to postgis"
+    echo ""
+    echo  -e "${GREEN}Options:${END}"
+    echo "--help    -h   Show the help"
+    exit 1
+fi
+
+DATABASE="$1"
+if [ -z "$1" ]; then
+  DATABASE="postgis"
+fi
+
+USER="$2"
+if [ -z "$2" ]; then
+  USER="postgis"
+fi
+
+PASSWORD="$3"
+if [ -z "$3" ]; then
+  PASSWORD="postgis"
+fi
+
+psql -c "create user $USER with encrypted password '$PASSWORD' createdb;";
+
+createdb "$DATABASE" -U "$USER"
+
+psql -d "$DATABASE" -c "create extension if not exists postgis;"
+
+echo  -e "The user ${GREEN}$USER${END} and database ${GREEN}$DATABASE${END} have been successfully created!"

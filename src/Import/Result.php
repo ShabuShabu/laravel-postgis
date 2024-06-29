@@ -35,7 +35,7 @@ class Result
     public function rows(): array
     {
         return [
-            'total'   => $this->total,
+            'total' => $this->total,
             'created' => $this->created,
             'updated' => $this->updated,
         ];

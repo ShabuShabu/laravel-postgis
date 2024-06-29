@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace ShabuShabu\PostGIS\Models;
 
+use Database\Factories\OceanFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Ocean extends Model
 {
+    use HasFactory;
+
     protected $hidden = [
         'geom',
         'center',
@@ -35,5 +39,10 @@ class Ocean extends Model
     public function countries(): BelongsToMany
     {
         return $this->belongsToMany(Country::class);
+    }
+
+    protected static function newFactory(): OceanFactory
+    {
+        return new OceanFactory();
     }
 }

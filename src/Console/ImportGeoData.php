@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace ShabuShabu\PostGIS\Console;
 
-use Illuminate\Support\Arr;
 use Illuminate\Console\Command;
 use Illuminate\Events\Dispatcher;
-use ShabuShabu\PostGIS\Import\Events\Total;
+use Illuminate\Support\Arr;
 use ShabuShabu\PostGIS\Import\Events\Saved;
-use ShabuShabu\PostGIS\Import\Importers\Seas;
-use ShabuShabu\PostGIS\Import\Importers\Oceans;
-use Symfony\Component\Console\Helper\ProgressBar;
-use ShabuShabu\PostGIS\Import\Importers\Provinces;
-use ShabuShabu\PostGIS\Import\Importers\Timezones;
-use ShabuShabu\PostGIS\Import\Importers\Countries;
+use ShabuShabu\PostGIS\Import\Events\Total;
 use ShabuShabu\PostGIS\Import\Importers\Continents;
+use ShabuShabu\PostGIS\Import\Importers\Countries;
+use ShabuShabu\PostGIS\Import\Importers\Oceans;
+use ShabuShabu\PostGIS\Import\Importers\Provinces;
+use ShabuShabu\PostGIS\Import\Importers\Seas;
+use ShabuShabu\PostGIS\Import\Importers\Timezones;
+use Symfony\Component\Console\Helper\ProgressBar;
 
 class ImportGeoData extends Command
 {
@@ -34,7 +34,7 @@ class ImportGeoData extends Command
             'Which database table do you want to populate?',
             [
                 'All',
-                ...config('database.geo_tables')
+                ...config('database.geo_tables'),
             ],
             'All'
         );
@@ -58,11 +58,11 @@ class ImportGeoData extends Command
 
         $result = match ($table) {
             'continents' => Continents::import(),
-            'timezones'  => Timezones::import(),
-            'countries'  => Countries::import(),
-            'provinces'  => Provinces::import(),
-            'oceans'     => Oceans::import(),
-            'seas'       => Seas::import(),
+            'timezones' => Timezones::import(),
+            'countries' => Countries::import(),
+            'provinces' => Provinces::import(),
+            'oceans' => Oceans::import(),
+            'seas' => Seas::import(),
         };
 
         if (! $result) {
@@ -74,7 +74,7 @@ class ImportGeoData extends Command
         }
 
         [
-            'total'   => $total,
+            'total' => $total,
             'created' => $created,
             'updated' => $updated,
         ] = $result->rows();

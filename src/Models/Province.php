@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace ShabuShabu\PostGIS\Models;
 
+use Database\Factories\ProvinceFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Province extends Model
 {
+    use HasFactory;
+
     protected $hidden = [
         'geom',
         'center',
@@ -46,5 +50,10 @@ class Province extends Model
     public function country(): BelongsTo
     {
         return $this->belongsTo(Country::class);
+    }
+
+    protected static function newFactory(): ProvinceFactory
+    {
+        return new ProvinceFactory();
     }
 }

@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace ShabuShabu\PostGIS;
 
 use Illuminate\Database\Schema\Blueprint;
-use ShabuShabu\PostGIS\Console\ImportGeoData;
 use Illuminate\Database\Schema\Grammars\Grammar;
+use ShabuShabu\PostGIS\Actions\Contracts;
 use ShabuShabu\PostGIS\Console\BackupDatabaseTables;
+use ShabuShabu\PostGIS\Console\ImportGeoData;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use ShabuShabu\PostGIS\Actions\Contracts;
 
 class PostGISServiceProvider extends PackageServiceProvider
 {
@@ -28,9 +28,18 @@ class PostGISServiceProvider extends PackageServiceProvider
                 ImportGeoData::class,
                 BackupDatabaseTables::class,
             )
+            ->hasMigrations(
+                'create_timezones_table',
+                'create_continents_table',
+                'create_oceans_table',
+                'create_seas_table',
+                'create_countries_table',
+                'create_provinces_table',
+            )
             ->hasInstallCommand(function (InstallCommand $command) {
                 $command
                     ->publishConfigFile()
+                    ->publishMigrations()
                     ->askToStarRepoOnGitHub('ShabuShabu/laravel-postgis');
             });
     }

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
-use App\Models\Sea;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use ShabuShabu\PostGIS\Models\Sea;
 
 /**
  * @extends Factory<Sea>

@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace ShabuShabu\PostGIS\Models;
 
+use Database\Factories\CountryFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Country extends Model
 {
+    use HasFactory;
+
     protected $hidden = [
         'geom',
         'center',
@@ -40,5 +44,10 @@ class Country extends Model
     public function timezones(): BelongsToMany
     {
         return $this->belongsToMany(Timezone::class);
+    }
+
+    protected static function newFactory(): CountryFactory
+    {
+        return new CountryFactory();
     }
 }

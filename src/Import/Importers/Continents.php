@@ -4,32 +4,30 @@ declare(strict_types=1);
 
 namespace ShabuShabu\PostGIS\Import\Importers;
 
-use App\Models\Timezone;
-use App\Models\Continent;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB;
-use App\Support\Expressions\GIS\Dump;
-use Illuminate\Database\Eloquent\Model;
-use ShabuShabu\PostGIS\Import\Importer;
-use App\Support\Expressions\GIS\SetSRID;
-use Tpetry\QueryExpressions\Value\Value;
 use Illuminate\Database\Eloquent\Builder;
-use App\Support\Expressions\GIS\Transform;
-use App\Services\Import\Contracts\ByoQuery;
-use App\Support\Expressions\GIS\Intersects;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use ShabuShabu\PostGIS\Expressions\SetSRID;
+use ShabuShabu\PostGIS\Expressions\Transform;
+use ShabuShabu\PostGIS\Import\Contracts\ByoQuery;
+use ShabuShabu\PostGIS\Import\Contracts\NeedsRelations;
+use ShabuShabu\PostGIS\Import\Importer;
+use ShabuShabu\PostGIS\Models\Continent;
 use Tpetry\QueryExpressions\Language\Alias;
-use App\Services\Import\Contracts\NeedsRelations;
+
+use function ShabuShabu\PostGIS\query;
 
 class Continents extends Importer implements ByoQuery, NeedsRelations
 {
     public function builder(): Builder
     {
-        return Continent::query();
+        return query(config('postgis.models.continent'));
     }
 
     protected function sourceLocation(): string
     {
-        return storage_path('gis/World_Continents_-8398826466908339531.zip');
+        return config('postgis.sources.continents');
     }
 
     public function sourceId(object $record): string
@@ -44,13 +42,13 @@ class Continents extends Importer implements ByoQuery, NeedsRelations
             'name' => 'continent',
             'slug' => fn (object $record) => Str::slug($record->continent),
             'code' => fn (object $record) => match ($record->continent) {
-                'Africa'        => 'AF',
-                'Antarctica'    => 'AN',
-                'Asia'          => 'AS',
-                'Australia'     => 'AU',
-                'Europe'        => 'EU',
+                'Africa' => 'AF',
+                'Antarctica' => 'AN',
+                'Asia' => 'AS',
+                'Australia' => 'AU',
+                'Europe' => 'EU',
                 'North America' => 'NA',
-                'Oceania'       => 'OC',
+                'Oceania' => 'OC',
                 'South America' => 'SA',
             },
         ];
@@ -63,7 +61,7 @@ class Continents extends Importer implements ByoQuery, NeedsRelations
             ->from(
                 DB::table($name)->select([
                     'continent',
-                    new Alias(new Transform(new SetSRID('geom', 4087), 4326), 'geom')
+                    new Alias(new Transform(new SetSRID('geom', 4087), 4326), 'geom'),
                 ]),
                 't'
             )
@@ -72,26 +70,18 @@ class Continents extends Importer implements ByoQuery, NeedsRelations
 
     public function addRelationships(Model $model, object $record): void
     {
-        if (! $model instanceof Continent) {
-            return;
+        if ($model instanceof Continent) {
+            $this->addTimezones($model);
         }
-
-        $this->addTimezones($model);
     }
 
     protected function addTimezones(Continent $model): void
     {
-        $ids = Timezone::query()
-            ->distinct()
-            ->select('timezones.id')
-            ->withExpression(
-                'co',
-                Continent::query()
-                    ->select(['id', 'name', new Dump('geom')])
-                    ->where('id', $model->id)
-            )
-            ->join('co', new Intersects('timezones.geom', 'co.geom'), '=', new Value(true))
-            ->pluck('id');
+        $ids = $this->ids(
+            $model->getKey(),
+            config('postgis.models.timezone'),
+            config('postgis.models.continent'),
+        );
 
         $model->timezones()->toggle($ids);
     }

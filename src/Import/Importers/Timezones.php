@@ -4,21 +4,22 @@ declare(strict_types=1);
 
 namespace ShabuShabu\PostGIS\Import\Importers;
 
-use App\Models\Timezone;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 use ShabuShabu\PostGIS\Import\Importer;
-use Illuminate\Database\Eloquent\Builder;
+
+use function ShabuShabu\PostGIS\query;
 
 class Timezones extends Importer
 {
     public function builder(): Builder
     {
-        return Timezone::query();
+        return query(config('postgis.models.timezone'));
     }
 
     protected function sourceLocation(): string
     {
-        return storage_path('gis/timezones-with-oceans-now.shapefile.zip');
+        return config('postgis.sources.timezones');
     }
 
     public function sourceId(object $record): string

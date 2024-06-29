@@ -4,27 +4,25 @@ declare(strict_types=1);
 
 namespace ShabuShabu\PostGIS\Import\Importers;
 
-use App\Models\Ocean;
-use App\Models\Timezone;
-use Illuminate\Support\Str;
-use App\Support\Expressions\GIS\Dump;
-use Illuminate\Database\Eloquent\Model;
-use ShabuShabu\PostGIS\Import\Importer;
-use Tpetry\QueryExpressions\Value\Value;
 use Illuminate\Database\Eloquent\Builder;
-use App\Support\Expressions\GIS\Intersects;
-use App\Services\Import\Contracts\NeedsRelations;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
+use ShabuShabu\PostGIS\Import\Contracts\NeedsRelations;
+use ShabuShabu\PostGIS\Import\Importer;
+use ShabuShabu\PostGIS\Models\Ocean;
+
+use function ShabuShabu\PostGIS\query;
 
 class Oceans extends Importer implements NeedsRelations
 {
     public function builder(): Builder
     {
-        return Ocean::query();
+        return query(config('postgis.models.ocean'));
     }
 
     protected function sourceLocation(): string
     {
-        return storage_path('gis/GOaS_v1_20211214.zip');
+        return config('postgis.sources.oceans');
     }
 
     public function sourceId(object $record): string
@@ -54,17 +52,11 @@ class Oceans extends Importer implements NeedsRelations
 
     protected function addTimezones(Ocean $model): void
     {
-        $ids = Timezone::query()
-            ->distinct()
-            ->select('timezones.id')
-            ->withExpression(
-                'oc',
-                Ocean::query()
-                    ->select(['id', 'name', new Dump('geom')])
-                    ->where('id', $model->id)
-            )
-            ->join('oc', new Intersects('timezones.geom', 'oc.geom'), '=', new Value(true))
-            ->pluck('id');
+        $ids = $this->ids(
+            $model->getKey(),
+            config('postgis.models.timezone'),
+            config('postgis.models.ocean'),
+        );
 
         $model->timezones()->toggle($ids);
     }

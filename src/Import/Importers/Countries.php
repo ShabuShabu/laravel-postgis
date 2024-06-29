@@ -4,24 +4,19 @@ declare(strict_types=1);
 
 namespace ShabuShabu\PostGIS\Import\Importers;
 
-use App\Models\Sea;
-use App\Models\Ocean;
-use App\Models\Country;
-use App\Models\Timezone;
-use App\Models\Continent;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB;
-use App\Support\Expressions\GIS\Dump;
-use App\Support\Expressions\GIS\Multi;
-use App\Support\Expressions\GIS\Union;
-use Illuminate\Database\Eloquent\Model;
-use ShabuShabu\PostGIS\Import\Importer;
-use Tpetry\QueryExpressions\Value\Value;
 use Illuminate\Database\Eloquent\Builder;
-use App\Services\Import\Contracts\ByoQuery;
-use App\Support\Expressions\GIS\Intersects;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use ShabuShabu\PostGIS\Expressions\Multi;
+use ShabuShabu\PostGIS\Expressions\Union;
+use ShabuShabu\PostGIS\Import\Contracts\ByoQuery;
+use ShabuShabu\PostGIS\Import\Contracts\NeedsRelations;
+use ShabuShabu\PostGIS\Import\Importer;
+use ShabuShabu\PostGIS\Models\Country;
 use Tpetry\QueryExpressions\Language\Alias;
-use App\Services\Import\Contracts\NeedsRelations;
+
+use function ShabuShabu\PostGIS\query;
 
 class Countries extends Importer implements ByoQuery, NeedsRelations
 {
@@ -47,17 +42,17 @@ class Countries extends Importer implements ByoQuery, NeedsRelations
         'Cyprus U.N. Buffer Zone',
         'Cyprus',
         'Somaliland',
-        'Somalia'
+        'Somalia',
     ];
 
     public function builder(): Builder
     {
-        return Country::query();
+        return query(config('postgis.models.country'));
     }
 
     protected function sourceLocation(): string
     {
-        return storage_path('gis/ne_10m_admin_0_countries.zip');
+        return config('postgis.sources.countries');
     }
 
     public function sourceId(object $record): string
@@ -67,28 +62,28 @@ class Countries extends Importer implements ByoQuery, NeedsRelations
 
     public function mappings(): array
     {
-        $getName = fn (object $record) => $record->name_long === 'Heard I. and McDonald Islands'
+        $getName = static fn (object $record) => $record->name_long === 'Heard I. and McDonald Islands'
             ? 'Heard Island and McDonald Islands'
             : $record->name_long;
 
         return [
-            'geom'        => 'geom',
-            'name'        => $getName,
-            'slug'        => fn (object $record) => Str::slug(str_replace(['and', 'of', 'the'], '', $getName($record))),
+            'geom' => 'geom',
+            'name' => $getName,
+            'slug' => fn (object $record) => Str::slug(str_replace(['and', 'of', 'the'], '', $getName($record))),
             'iso3166_1a2' => fn (object $record) => match (true) {
                 $record->name_long === 'Taiwan' => 'TW',
                 $record->name_long === 'Norway' => 'NO',
                 $record->name_long === 'France' => 'FR',
                 $record->name_long === 'Kosovo' => 'XK',
-                $record->iso_a2 === '-99'       => null,
-                default                         => $record->iso_a2,
+                $record->iso_a2 === '-99' => null,
+                default => $record->iso_a2,
             },
             'iso3166_1a3' => fn (object $record) => match (true) {
                 $record->name_long === 'Norway' => 'NOR',
                 $record->name_long === 'France' => 'FRA',
                 $record->name_long === 'Kosovo' => 'XKX',
-                $record->iso_a3 === '-99'       => null,
-                default                         => $record->iso_a3,
+                $record->iso_a3 === '-99' => null,
+                default => $record->iso_a3,
             },
         ];
     }
@@ -105,23 +100,23 @@ class Countries extends Importer implements ByoQuery, NeedsRelations
                 'geom' => DB::table($table)
                     ->select(new Alias(new Multi(new Union('geom')), 'geom'))
                     ->whereIn('name_long', $areas)
-                    ->take(1)
+                    ->take(1),
             ])->where('c.name_long', $main);
     }
 
     public function tempQuery(string $name): \Illuminate\Database\Query\Builder
     {
         return DB::query()
-           ->from(
-               DB::table($name)
-                   ->select(['name_long', 'iso_a2', 'iso_a3', 'continent', 'region_un', 'geom'])
-                   ->whereNotIn('name_long', $this->skip)
-                   ->union($this->combine($name, 'Australia', ['Coral Sea Islands', 'Australia']))
-                   ->union($this->combine($name, 'Somalia', ['Somaliland', 'Somalia']))
-                   ->union($this->combine($name, 'Cyprus', ['Northern Cyprus', 'Cyprus U.N. Buffer Zone', 'Cyprus'])),
-               't'
-           )
-           ->orderBy('name_long');
+            ->from(
+                DB::table($name)
+                    ->select(['name_long', 'iso_a2', 'iso_a3', 'continent', 'region_un', 'geom'])
+                    ->whereNotIn('name_long', $this->skip)
+                    ->union($this->combine($name, 'Australia', ['Coral Sea Islands', 'Australia']))
+                    ->union($this->combine($name, 'Somalia', ['Somaliland', 'Somalia']))
+                    ->union($this->combine($name, 'Cyprus', ['Northern Cyprus', 'Cyprus U.N. Buffer Zone', 'Cyprus'])),
+                't'
+            )
+            ->orderBy('name_long');
     }
 
     public function addRelationships(Model $model, object $record): void
@@ -138,68 +133,44 @@ class Countries extends Importer implements ByoQuery, NeedsRelations
 
     protected function addContinents(Country $model): void
     {
-        $ids = Continent::query()
-            ->distinct()
-            ->select('continents.id')
-            ->withExpression(
-                'co',
-                Country::query()
-                    ->select(['id', 'name', new Dump('geom')])
-                    ->where('id', $model->id)
-            )
-            ->join('co', new Intersects('continents.geom', 'co.geom'), '=', new Value(true))
-            ->pluck('id');
+        $ids = $this->ids(
+            $model->getKey(),
+            config('postgis.models.continent'),
+            config('postgis.models.country'),
+        );
 
         $model->continents()->toggle($ids);
     }
 
     protected function addOceans(Country $model): void
     {
-        $ids = Ocean::query()
-            ->distinct()
-            ->select('oceans.id')
-            ->withExpression(
-                'co',
-                Country::query()
-                    ->select(['id', 'name', new Dump('geom')])
-                    ->where('id', $model->id)
-            )
-            ->join('co', new Intersects('oceans.geom', 'co.geom'), '=', new Value(true))
-            ->pluck('id');
+        $ids = $this->ids(
+            $model->getKey(),
+            config('postgis.models.ocean'),
+            config('postgis.models.country'),
+        );
 
         $model->oceans()->toggle($ids);
     }
 
     protected function addSeas(Country $model): void
     {
-        $ids = Sea::query()
-            ->distinct()
-            ->select('seas.id')
-            ->withExpression(
-                'co',
-                Country::query()
-                    ->select(['id', 'name', new Dump('geom')])
-                    ->where('id', $model->id)
-            )
-            ->join('co', new Intersects('seas.geom', 'co.geom'), '=', new Value(true))
-            ->pluck('id');
+        $ids = $this->ids(
+            $model->getKey(),
+            config('postgis.models.sea'),
+            config('postgis.models.country'),
+        );
 
         $model->seas()->toggle($ids);
     }
 
     protected function addTimezones(Country $model): void
     {
-        $ids = Timezone::query()
-            ->distinct()
-            ->select('timezones.id')
-            ->withExpression(
-                'co',
-                Country::query()
-                    ->select(['id', 'name', new Dump('geom')])
-                    ->where('id', $model->id)
-            )
-            ->join('co', new Intersects('timezones.geom', 'co.geom'), '=', new Value(true))
-            ->pluck('id');
+        $ids = $this->ids(
+            $model->getKey(),
+            config('postgis.models.timezone'),
+            config('postgis.models.country'),
+        );
 
         $model->timezones()->toggle($ids);
     }

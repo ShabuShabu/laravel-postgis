@@ -4,93 +4,103 @@ declare(strict_types=1);
 
 namespace ShabuShabu\PostGIS\Import\Importers;
 
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB;
-use App\Support\Expressions\GIS\Dump;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
+use ShabuShabu\PostGIS\Import\Contracts\NeedsRelations;
 use ShabuShabu\PostGIS\Import\Importer;
 use ShabuShabu\PostGIS\Models\Province;
-use App\Support\Expressions\GIS\SetSRID;
-use Tpetry\QueryExpressions\Value\Value;
-use Illuminate\Database\Eloquent\Builder;
-use App\Support\Expressions\GIS\Transform;
-use App\Services\Import\Contracts\ByoQuery;
-use App\Support\Expressions\GIS\Intersects;
-use Tpetry\QueryExpressions\Language\Alias;
-use App\Services\Import\Contracts\NeedsRelations;
 
-class Provinces extends Importer implements ByoQuery, NeedsRelations
+use function ShabuShabu\PostGIS\query;
+
+class Provinces extends Importer implements NeedsRelations
 {
     public function builder(): Builder
     {
-        return Province::query();
+        return query(config('postgis.models.province'));
     }
 
     protected function sourceLocation(): string
     {
-        return storage_path('gis/World_Continents_-8398826466908339531.zip');
+        return config('postgis.sources.provinces');
     }
 
     public function sourceId(object $record): string
     {
-        return md5($record->continent);
+        return md5($record->name);
     }
 
     public function mappings(): array
     {
         return [
             'geom' => 'geom',
-            'name' => 'continent',
-            'slug' => fn (object $record) => Str::slug($record->continent),
-            'code' => fn (object $record) => match ($record->continent) {
-                'Africa'        => 'AF',
-                'Antarctica'    => 'AN',
-                'Asia'          => 'AS',
-                'Australia'     => 'AU',
-                'Europe'        => 'EU',
-                'North America' => 'NA',
-                'Oceania'       => 'OC',
-                'South America' => 'SA',
-            },
+            'name' => 'name',
+            'iso3166_2' => 'iso_3166_2',
+            'slug' => fn (object $record) => Str::slug($record->name),
+            'country_id' => fn (object $record) => Cache::remember(
+                'import:countries:' . ($code = $record->adm0_a3),
+                now()->addMinutes(5),
+                static fn () => query(config('postgis.models.country'))
+                    ->where('iso3166_1a3', $code)
+                    ->firstOrFail()
+                    ->getKey()
+            ),
         ];
-    }
-
-    public function tempQuery(string $name): \Illuminate\Database\Query\Builder
-    {
-        return DB::query()
-            ->select(['*'])
-            ->from(
-                DB::table($name)->select([
-                    'continent',
-                    new Alias(new Transform(new SetSRID('geom', 4087), 4326), 'geom')
-                ]),
-                't'
-            )
-            ->orderBy('continent');
     }
 
     public function addRelationships(Model $model, object $record): void
     {
-        if (! $model instanceof Continent) {
+        if (! $model instanceof Province) {
             return;
         }
 
+        $this->addContinents($model);
+        $this->addOceans($model);
+        $this->addSeas($model);
         $this->addTimezones($model);
     }
 
-    protected function addTimezones(Continent $model): void
+    protected function addContinents(Province $model): void
     {
-        $ids = Timezone::query()
-            ->distinct()
-            ->select('timezones.id')
-            ->withExpression(
-                'co',
-                Continent::query()
-                    ->select(['id', 'name', new Dump('geom')])
-                    ->where('id', $model->id)
-            )
-            ->join('co', new Intersects('timezones.geom', 'co.geom'), '=', new Value(true))
-            ->pluck('id');
+        $ids = $this->ids(
+            $model->getKey(),
+            config('postgis.models.continent'),
+            config('postgis.models.province'),
+        );
+
+        $model->continents()->toggle($ids);
+    }
+
+    protected function addOceans(Province $model): void
+    {
+        $ids = $this->ids(
+            $model->getKey(),
+            config('postgis.models.ocean'),
+            config('postgis.models.province'),
+        );
+
+        $model->oceans()->toggle($ids);
+    }
+
+    protected function addSeas(Province $model): void
+    {
+        $ids = $this->ids(
+            $model->getKey(),
+            config('postgis.models.sea'),
+            config('postgis.models.province'),
+        );
+
+        $model->seas()->toggle($ids);
+    }
+
+    protected function addTimezones(Province $model): void
+    {
+        $ids = $this->ids(
+            $model->getKey(),
+            config('postgis.models.timezone'),
+            config('postgis.models.province'),
+        );
 
         $model->timezones()->toggle($ids);
     }

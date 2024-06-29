@@ -5,30 +5,30 @@ declare(strict_types=1);
 namespace ShabuShabu\PostGIS\Actions;
 
 use Closure;
-use Throwable;
-use ZipArchive;
-use RuntimeException;
-use Illuminate\Support\Str;
+use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
-use ShabuShabu\PostGIS\Import\Result;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\Client\RequestException;
-use Illuminate\Contracts\Filesystem\Filesystem;
-use Illuminate\Http\Client\ConnectionException;
-use ShabuShabu\PostGIS\Import\Contracts\Schema;
+use Illuminate\Support\Str;
+use RuntimeException;
+use ShabuShabu\PostGIS\Actions\Contracts\ImportsShapefile;
 use ShabuShabu\PostGIS\Import\Contracts\ByoQuery;
 use ShabuShabu\PostGIS\Import\Contracts\NeedsRelations;
-use ShabuShabu\PostGIS\Actions\Contracts\ImportsShapefile;
+use ShabuShabu\PostGIS\Import\Contracts\Schema;
+use ShabuShabu\PostGIS\Import\Result;
+use Throwable;
+use ZipArchive;
 
 class ImportShapefile implements ImportsShapefile
 {
     public function __invoke(Schema $schema): ?Result
     {
         $uuid = Str::uuid()->toString();
-        $tempTable = '_'.strtolower((string) Str::ulid());
+        $tempTable = '_' . strtolower((string) Str::ulid());
 
         try {
             $this->unzip(
@@ -67,7 +67,7 @@ class ImportShapefile implements ImportsShapefile
 
         foreach ($query->lazy() as $record) {
             $columns = collect($schema->mappings())->mapWithKeys(
-                fn (Closure|string $source, string $dest) => [
+                fn (Closure | string $source, string $dest) => [
                     $dest => $source instanceof Closure ? $source($record) : $record->$source,
                 ]
             );
@@ -109,10 +109,10 @@ class ImportShapefile implements ImportsShapefile
 
         return sprintf(
             '%s -s 4326 -c -I %s public.%s | %s -h %s -d %s -U %s',
-            config('app.binaries.shp2pgsql'),
+            config('postgis.binaries.shp2pgsql'),
             escapeshellarg($this->disk()->path((string) $shapefile)),
             $tempTable,
-            config('app.binaries.psql'),
+            config('postgis.binaries.psql'),
             escapeshellarg($this->config('host')),
             escapeshellarg($this->config('database')),
             escapeshellarg($this->config('username'))
@@ -136,7 +136,7 @@ class ImportShapefile implements ImportsShapefile
         }
 
         $this->disk()->put(
-            $path = $uuid.'.zip',
+            $path = $uuid . '.zip',
             $contents
         );
 
@@ -161,7 +161,7 @@ class ImportShapefile implements ImportsShapefile
 
         $disk = $this->disk();
 
-        if ($disk->exists($file = $uuid.'.zip')) {
+        if ($disk->exists($file = $uuid . '.zip')) {
             $disk->delete($file);
         }
 

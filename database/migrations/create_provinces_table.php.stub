@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use App\Support\Expressions\GIS\BoxTwoD;
-use App\Support\Expressions\GIS\Centroid;
+use ShabuShabu\PostGIS\Expressions\Centroid;
+use ShabuShabu\PostGIS\Expressions\Box\TwoD;
 use Illuminate\Database\Migrations\Migration;
 use Tpetry\PostgresqlEnhanced\Schema\Blueprint;
 use Tpetry\PostgresqlEnhanced\Support\Facades\Schema;
 
-use function Database\area;
+use function ShabuShabu\PostGIS\area;
 
 return new class () extends Migration
 {
@@ -23,18 +23,33 @@ return new class () extends Migration
             $table->text('name');
             $table->text('slug');
             $table->text('hash');
+            $table->text('iso3166_2')->nullable();
             $table->integer('area_km2')->storedAs(area());
             $table->timestampsTz(null);
             $table->geometry('center', 'point', 4326)->storedAs(new Centroid('geom'));
-            $table->box2d('bbox_2d')->storedAs(new BoxTwoD('geom'));
+            $table->box2d('bbox_2d')->storedAs(new TwoD('geom'));
             $table->geometry('geom', 'multipolygon', 4326);
 
             $table->uniqueIndex('name');
             $table->uniqueIndex('hash');
             $table->uniqueIndex('slug');
-            $table->uniqueIndex('iso3166_1a2');
-            $table->uniqueIndex('iso3166_1a3');
+            $table->uniqueIndex('iso3166_2');
             $table->spatialIndex('geom');
+            $table->spatialIndex('center');
+        });
+
+        Schema::create('continent_province', static function (Blueprint $table) {
+            $table->identity(always: true)->primary();
+            $table->foreignId('continent_id')
+                ->constrained('continents')
+                ->cascadeOnUpdate()
+                ->cascadeOnDelete();
+            $table->foreignId('province_id')
+                ->constrained('provinces')
+                ->cascadeOnUpdate()
+                ->cascadeOnDelete();
+
+            $table->uniqueIndex(['continent_id', 'province_id']);
         });
 
         Schema::create('country_province', static function (Blueprint $table) {

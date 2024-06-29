@@ -4,19 +4,16 @@ declare(strict_types=1);
 
 namespace ShabuShabu\PostGIS\Import\Importers;
 
-use App\Models\Sea;
-use App\Models\Ocean;
-use App\Models\Timezone;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB;
-use App\Support\Expressions\GIS\Dump;
-use Illuminate\Database\Eloquent\Model;
-use ShabuShabu\PostGIS\Import\Importer;
-use Tpetry\QueryExpressions\Value\Value;
 use Illuminate\Database\Eloquent\Builder;
-use App\Services\Import\Contracts\ByoQuery;
-use App\Support\Expressions\GIS\Intersects;
-use App\Services\Import\Contracts\NeedsRelations;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use ShabuShabu\PostGIS\Import\Contracts\ByoQuery;
+use ShabuShabu\PostGIS\Import\Contracts\NeedsRelations;
+use ShabuShabu\PostGIS\Import\Importer;
+use ShabuShabu\PostGIS\Models\Sea;
+
+use function ShabuShabu\PostGIS\query;
 
 class Seas extends Importer implements ByoQuery, NeedsRelations
 {
@@ -24,12 +21,12 @@ class Seas extends Importer implements ByoQuery, NeedsRelations
 
     public function builder(): Builder
     {
-        return Sea::query();
+        return query(config('postgis.models.sea'));
     }
 
     protected function sourceLocation(): string
     {
-        return storage_path('gis/World_Seas_IHO_v3.zip');
+        return config('postgis.sources.seas');
     }
 
     public function sourceId(object $record): string
@@ -66,34 +63,22 @@ class Seas extends Importer implements ByoQuery, NeedsRelations
 
     protected function addOceans(Sea $model): void
     {
-        $ids = Ocean::query()
-            ->distinct()
-            ->select('oceans.id')
-            ->withExpression(
-                'se',
-                Sea::query()
-                    ->select(['id', 'name', new Dump('geom')])
-                    ->where('id', $model->id)
-            )
-            ->join('se', new Intersects('oceans.geom', 'se.geom'), '=', new Value(true))
-            ->pluck('id');
+        $ids = $this->ids(
+            $model->getKey(),
+            config('postgis.models.ocean'),
+            config('postgis.models.sea'),
+        );
 
         $model->oceans()->toggle($ids);
     }
 
     protected function addTimezones(Sea $model): void
     {
-        $ids = Timezone::query()
-            ->distinct()
-            ->select('timezones.id')
-            ->withExpression(
-                'se',
-                Sea::query()
-                    ->select(['id', 'name', new Dump('geom')])
-                    ->where('id', $model->id)
-            )
-            ->join('se', new Intersects('timezones.geom', 'se.geom'), '=', new Value(true))
-            ->pluck('id');
+        $ids = $this->ids(
+            $model->getKey(),
+            config('postgis.models.timezone'),
+            config('postgis.models.sea'),
+        );
 
         $model->timezones()->toggle($ids);
     }

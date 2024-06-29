@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use App\Support\Expressions\GIS\BoxTwoD;
-use App\Support\Expressions\GIS\Centroid;
+use ShabuShabu\PostGIS\Expressions\Centroid;
+use ShabuShabu\PostGIS\Expressions\Box;
 use Illuminate\Database\Migrations\Migration;
 use Tpetry\PostgresqlEnhanced\Schema\Blueprint;
 use Tpetry\PostgresqlEnhanced\Support\Facades\Schema;
 
-use function Database\area;
+use function ShabuShabu\PostGIS\area;
 
 return new class () extends Migration
 {
@@ -23,13 +23,14 @@ return new class () extends Migration
             $table->bigInteger('area_km2')->storedAs(area());
             $table->timestampsTz(null);
             $table->geometry('center', 'point', 4326)->storedAs(new Centroid('geom'));
-            $table->box2d('bbox_2d')->storedAs(new BoxTwoD('geom'));
+            $table->box2d('bbox_2d')->storedAs(new Box\TwoD('geom'));
             $table->geometry('geom', 'multipolygon', 4326);
 
             $table->uniqueIndex('name');
             $table->uniqueIndex('hash');
             $table->uniqueIndex('slug');
             $table->spatialIndex('geom');
+            $table->spatialIndex('center');
         });
 
         Schema::create('continent_timezone', static function (Blueprint $table) {
