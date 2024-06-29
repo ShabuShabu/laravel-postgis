@@ -12,6 +12,11 @@ use ShabuShabu\PostGIS\Expressions\Math\Round;
 use Tpetry\QueryExpressions\Operator\Arithmetic\Divide;
 use Tpetry\QueryExpressions\Value\Value;
 
+function query(string $class): Builder
+{
+    return call_user_func([$class, 'query']);
+}
+
 function area(string $column = 'geom'): Round
 {
     return new Round(
@@ -22,9 +27,4 @@ function area(string $column = 'geom'): Round
             )
         )
     );
-}
-
-function query(string $class): Builder
-{
-    return call_user_func([$class, 'query']);
 }

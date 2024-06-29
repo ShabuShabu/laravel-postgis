@@ -1,5 +1,7 @@
 #!/bin/bash
 
-if [ "$(git branch --no-color --show-current)" = "develop" ]; then
+BRANCH="$(git branch --no-color --show-current)"
+
+if [[ ! $BRANCH =~ feature/* ]]; then
   lint-staged
 fi
