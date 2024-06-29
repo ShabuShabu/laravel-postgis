@@ -34,6 +34,8 @@ We do accept pull requests for any additional functions!
 
 The expressions can be used in queries or in migrations.
 
+PostGIS queries often have subtle differences between them, so the way we use this package at ShabuShabu is to extend the Eloquent builder for a given model and use the expressions in there.
+
 ### Query examples
 
 #### Getting the GeoJSON representation of a geometry column
