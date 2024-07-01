@@ -7,6 +7,10 @@ declare(strict_types=1);
 use ShabuShabu\PostGIS\Expressions\Position\MakePoint;
 use Tpetry\QueryExpressions\Value\Number;
 
+it('creates a 2d point from columns')
+    ->expect(new MakePoint('lng', 'lat', 'm', 'z'))
+    ->toBeExpression('ST_MakePoint("lng", "lat", "m", "z")');
+
 it('creates a 2d point from coordinates')
     ->expect(new MakePoint(10.234, 45.29439))
     ->toBeExpression('ST_MakePoint(10.234, 45.29439)');

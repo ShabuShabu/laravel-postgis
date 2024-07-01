@@ -17,10 +17,10 @@ readonly class MakePoint implements GisExpression
     use Stringable;
 
     public function __construct(
-        private float | Expression $lng,
-        private float | Expression $lat,
-        private null | float | Expression $elevation = null,
-        private null | float | Expression $timestamp = null
+        private float | string | Expression $lng,
+        private float | string | Expression $lat,
+        private null | string | float | Expression $elevation = null,
+        private null | string | float | Expression $timestamp = null
     ) {}
 
     public function getValue(Grammar $grammar): string
