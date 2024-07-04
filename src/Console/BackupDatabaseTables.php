@@ -39,6 +39,11 @@ class BackupDatabaseTables extends Command
             'ocean_province',
             'province_sea',
             'province_timezone',
+            'continent_disputed_area',
+            'country_disputed_area',
+            'disputed_area_province',
+            'disputed_area_sea',
+            'disputed_area_timezone',
         ]);
 
         return match ($context) {

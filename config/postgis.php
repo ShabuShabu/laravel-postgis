@@ -13,6 +13,7 @@ return [
         'seas' => Importers\Seas::class,
         'countries' => Importers\Countries::class,
         'provinces' => Importers\Provinces::class,
+        'disputed_areas' => Importers\DisputedAreas::class,
     ],
 
     'sources' => [
@@ -22,6 +23,7 @@ return [
         'seas' => storage_path('gis/World_Seas_IHO_v3.zip'),
         'countries' => storage_path('gis/ne_10m_admin_0_countries.zip'),
         'provinces' => storage_path('gis/ne_10m_admin_1_states_provinces.zip'),
+        'disputed_areas' => storage_path('gis/ne_10m_admin_0_disputed_areas.zip'),
     ],
 
     'models' => [
@@ -31,6 +33,7 @@ return [
         'sea' => Models\Sea::class,
         'country' => Models\Country::class,
         'province' => Models\Province::class,
+        'disputed_area' => Models\DisputedArea::class,
     ],
 
     'binaries' => [

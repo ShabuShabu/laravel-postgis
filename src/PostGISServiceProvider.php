@@ -35,6 +35,7 @@ class PostGISServiceProvider extends PackageServiceProvider
                 'create_seas_table',
                 'create_countries_table',
                 'create_provinces_table',
+                'create_disputed_areas_table',
             )
             ->hasInstallCommand(function (InstallCommand $command) {
                 $command
