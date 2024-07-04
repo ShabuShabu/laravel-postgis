@@ -41,7 +41,7 @@ abstract class Importer implements Schema
             ->withExpression(
                 'geo',
                 query($geoModel)
-                    ->select(['id', 'name', new Dump('geom')])
+                    ->select(['id', 'name', new Dump('geom', 'geom')])
                     ->where('id', $id)
             )
             ->join('geo', new Intersects("$table.geom", 'geo.geom'), '=', new Value(true))

@@ -27,14 +27,14 @@ class Province extends Model
         ];
     }
 
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class);
+    }
+
     public function timezones(): BelongsToMany
     {
         return $this->belongsToMany(Timezone::class);
-    }
-
-    public function continents(): BelongsToMany
-    {
-        return $this->belongsToMany(Continent::class);
     }
 
     public function oceans(): BelongsToMany
@@ -45,11 +45,6 @@ class Province extends Model
     public function seas(): BelongsToMany
     {
         return $this->belongsToMany(Sea::class);
-    }
-
-    public function country(): BelongsTo
-    {
-        return $this->belongsTo(Country::class);
     }
 
     protected static function newFactory(): ProvinceFactory

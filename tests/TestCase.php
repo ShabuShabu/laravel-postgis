@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace ShabuShabu\PostGIS\Tests;
 
-use ShabuShabu\PostGIS\PostGISServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Orchestra\Testbench\TestCase as Orchestra;
+use ShabuShabu\PostGIS\PostGISServiceProvider;
 use Tpetry\PostgresqlEnhanced\PostgresqlEnhancedServiceProvider;
 
 class TestCase extends Orchestra

@@ -17,39 +17,25 @@ return new class () extends Migration
         Schema::create('provinces', static function (Blueprint $table) {
             $table->identity(always: true)->primary();
             $table->foreignId('country_id')
+                ->nullable()
                 ->constrained('countries')
                 ->cascadeOnUpdate()
-                ->cascadeOnDelete();
+                ->nullOnDelete();
             $table->text('name');
             $table->text('slug');
+            $table->text('type')->nullable();
+            $table->text('iso3166_2');
             $table->text('hash');
-            $table->text('iso3166_2')->nullable();
             $table->integer('area_km2')->storedAs(area());
             $table->timestampsTz(null);
             $table->geometry('center', 'point', 4326)->storedAs(new Centroid('geom'));
             $table->box2d('bbox_2d')->storedAs(new TwoD('geom'));
             $table->geometry('geom', 'multipolygon', 4326);
 
-            $table->uniqueIndex('name');
             $table->uniqueIndex('hash');
             $table->uniqueIndex('slug');
-            $table->uniqueIndex('iso3166_2');
             $table->spatialIndex('geom');
             $table->spatialIndex('center');
-        });
-
-        Schema::create('continent_province', static function (Blueprint $table) {
-            $table->identity(always: true)->primary();
-            $table->foreignId('continent_id')
-                ->constrained('continents')
-                ->cascadeOnUpdate()
-                ->cascadeOnDelete();
-            $table->foreignId('province_id')
-                ->constrained('provinces')
-                ->cascadeOnUpdate()
-                ->cascadeOnDelete();
-
-            $table->uniqueIndex(['continent_id', 'province_id']);
         });
 
         Schema::create('country_province', static function (Blueprint $table) {

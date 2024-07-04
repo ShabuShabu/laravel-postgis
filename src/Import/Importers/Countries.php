@@ -57,7 +57,7 @@ class Countries extends Importer implements ByoQuery, NeedsRelations
 
     public function sourceId(object $record): string
     {
-        return md5($record->name_long);
+        return md5($record->ne_id);
     }
 
     public function mappings(): array
@@ -93,6 +93,7 @@ class Countries extends Importer implements ByoQuery, NeedsRelations
         return DB::table($table, 'c')
             ->select([
                 'c.name_long',
+                'c.ne_id',
                 'c.iso_a2',
                 'c.iso_a3',
                 'continent',
@@ -109,7 +110,7 @@ class Countries extends Importer implements ByoQuery, NeedsRelations
         return DB::query()
             ->from(
                 DB::table($name)
-                    ->select(['name_long', 'iso_a2', 'iso_a3', 'continent', 'region_un', 'geom'])
+                    ->select(['name_long', 'c.ne_id', 'iso_a2', 'iso_a3', 'continent', 'region_un', 'geom'])
                     ->whereNotIn('name_long', $this->skip)
                     ->union($this->combine($name, 'Australia', ['Coral Sea Islands', 'Australia']))
                     ->union($this->combine($name, 'Somalia', ['Somaliland', 'Somalia']))

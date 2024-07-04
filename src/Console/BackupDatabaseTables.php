@@ -26,7 +26,7 @@ class BackupDatabaseTables extends Command
             'dump'
         );
 
-        $tables = array_merge(config('database.geo_tables'), [
+        $tables = array_merge(array_keys(config('postgis.importers')), [
             'continent_timezone',
             'continent_country',
             'ocean_timezone',
@@ -36,7 +36,6 @@ class BackupDatabaseTables extends Command
             'country_province',
             'country_sea',
             'country_timezone',
-            'continent_province',
             'ocean_province',
             'province_sea',
             'province_timezone',
