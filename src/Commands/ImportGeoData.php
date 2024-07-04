@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ShabuShabu\PostGIS\Console;
+namespace ShabuShabu\PostGIS\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Events\Dispatcher;

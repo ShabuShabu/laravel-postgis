@@ -16,6 +16,11 @@ return new class () extends Migration
     {
         Schema::create('disputed_areas', static function (Blueprint $table) {
             $table->identity(always: true)->primary();
+            $table->foreignId('administered_by_id')
+                ->nullable()
+                ->constrained('countries')
+                ->cascadeOnUpdate()
+                ->nullOnDelete();
             $table->text('name');
             $table->text('slug');
             $table->text('hash');
@@ -71,6 +76,20 @@ return new class () extends Migration
                 ->cascadeOnDelete();
 
             $table->uniqueIndex(['disputed_area_id', 'province_id']);
+        });
+
+        Schema::create('disputed_area_ocean', static function (Blueprint $table) {
+            $table->identity(always: true)->primary();
+            $table->foreignId('disputed_area_id')
+                ->constrained('disputed_areas')
+                ->cascadeOnUpdate()
+                ->cascadeOnDelete();
+            $table->foreignId('ocean_id')
+                ->constrained('oceans')
+                ->cascadeOnUpdate()
+                ->cascadeOnDelete();
+
+            $table->uniqueIndex(['disputed_area_id', 'ocean_id']);
         });
 
         Schema::create('disputed_area_sea', static function (Blueprint $table) {

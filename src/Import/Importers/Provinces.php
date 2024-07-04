@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use ShabuShabu\PostGIS\Import\Concerns\NeedsUniqueSlug;
 use ShabuShabu\PostGIS\Import\Contracts\ByoQuery;
 use ShabuShabu\PostGIS\Import\Contracts\NeedsRelations;
 use ShabuShabu\PostGIS\Import\Importer;
@@ -18,7 +19,7 @@ use function ShabuShabu\PostGIS\query;
 
 class Provinces extends Importer implements ByoQuery, NeedsRelations
 {
-    protected array $slugs = [];
+    use NeedsUniqueSlug;
 
     public function builder(): Builder
     {
@@ -42,7 +43,7 @@ class Provinces extends Importer implements ByoQuery, NeedsRelations
             'name' => 'name',
             'iso3166_2' => 'iso_3166_2',
             'type' => fn (object $record) => is_string($record->type_en) ? Str::slug(strtolower($record->type_en)) : null,
-            'slug' => $this->uniqueSlug(...),
+            'slug' => fn (object $record) => $this->uniqueSlug($record->name),
             'country_id' => fn (object $record) => Cache::remember(
                 'import:countries:' . $record->adm0_a3,
                 now()->addMinutes(5),
@@ -56,23 +57,6 @@ class Provinces extends Importer implements ByoQuery, NeedsRelations
                     ?->getKey()
             ),
         ];
-    }
-
-    protected function uniqueSlug(object $record): string
-    {
-        $baseSlug = Str::slug($record->name);
-        $slug = $baseSlug;
-        $count = 1;
-
-        while (in_array($slug, $this->slugs, true)) {
-            $slug = $baseSlug . '-' . $count;
-            $count++;
-        }
-
-        $this->slugs[] = $slug;
-        $this->slugs = array_unique($this->slugs);
-
-        return $slug;
     }
 
     public function tempQuery(string $name): \Illuminate\Database\Query\Builder

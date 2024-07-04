@@ -7,6 +7,7 @@ namespace ShabuShabu\PostGIS\Models;
 use Database\Factories\DisputedAreaFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class DisputedArea extends Model
@@ -24,6 +25,11 @@ class DisputedArea extends Model
         return [
             'area_km2' => 'integer',
         ];
+    }
+
+    public function administeredBy(): BelongsTo
+    {
+        return $this->belongsTo(Country::class);
     }
 
     public function continents(): BelongsToMany

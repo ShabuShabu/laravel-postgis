@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ShabuShabu\PostGIS\Console;
+namespace ShabuShabu\PostGIS\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Filesystem\Filesystem;
@@ -42,6 +42,7 @@ class BackupDatabaseTables extends Command
             'continent_disputed_area',
             'country_disputed_area',
             'disputed_area_province',
+            'disputed_area_ocean',
             'disputed_area_sea',
             'disputed_area_timezone',
         ]);

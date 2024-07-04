@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
-use ShabuShabu\PostGIS\Models\DisputedArea;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use ShabuShabu\PostGIS\Models\DisputedArea;
 
 /**
  * @extends Factory<DisputedArea>
