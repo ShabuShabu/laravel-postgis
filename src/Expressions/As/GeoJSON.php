@@ -19,13 +19,18 @@ readonly class GeoJSON implements GisExpression
 
     public function __construct(
         private string | Expression $geom,
-        private int $maxDigits = 9,
-        private Option $option = Option::shortCRSNot4326,
+        private ?int $maxDigits = 9,
+        private ?Option $option = Option::shortCRSNot4326,
     ) {}
 
     public function getValue(Grammar $grammar): string
     {
         $geom = $this->stringize($grammar, $this->geom);
+
+        if ($this->maxDigits === null && $this->option === null) {
+            return "ST_AsGeoJSON($geom)";
+        }
+
         $maxDigits = max($this->maxDigits, 0);
 
         return "ST_AsGeoJSON($geom, $maxDigits, {$this->option->value})";

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.4.0 (2024-11-09)
+
+
+### Features
+
+* added various gis expressions and helpers ([a3b0812](https://github.com/ShabuShabu/laravel-postgis/commits/a3b08126714d3b69e66292e255ddbc93444be361))
+
 ## 0.3.0 (2024-07-21)
 
 

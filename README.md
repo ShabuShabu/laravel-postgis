@@ -51,6 +51,27 @@ Track::query()
     ->value('json');
 ```
 
+#### Get a GeoJson Feature collection
+
+```php
+use ShabuShabu\PostGIS\Expressions\As;
+use Tpetry\QueryExpressions\Language\Alias;
+use ShabuShabu\PostGIS\Expressions\Casts\AsJson;
+use ShabuShabu\PostGIS\Expressions\Helpers\JsonAgg;
+use ShabuShabu\PostGIS\Expressions\Helpers\JsonBuildObject;
+
+DB::query()
+    ->select([
+        new Alias(new JsonBuildObject([
+            'type'     => 'FeatureCollection',
+            'features' => new JsonAgg(new AsJson(new As\GeoJson('m.*', null, null)))
+        ]), 'features')
+    ])
+    ->from(
+        Track::query()->select(['geom', 'id', 'title']), 't'
+    );
+```
+
 #### Get an elevation profile from a linestring zm
 
 ```php
@@ -69,6 +90,39 @@ DB::query()->select([
         new Alias(new DumpPoints(new Simplify(new Collect('geom'), 0.15)), 'geom')
     )->where('trail_id', 27), 't'
 );
+```
+
+#### Get a bounding box for a collection of geometries
+
+```php
+use Tpetry\QueryExpressions\Language\Alias;
+use ShabuShabu\PostGIS\Expressions\Collect;
+use ShabuShabu\PostGIS\Expressions\Envelope;
+use ShabuShabu\PostGIS\Expressions\Box\TwoD;
+use ShabuShabu\PostGIS\Expressions\Math\Round;
+use ShabuShabu\PostGIS\Expressions\Casts\AsJson;
+use ShabuShabu\PostGIS\Expressions\Casts\AsNumeric;
+use ShabuShabu\PostGIS\Expressions\Helpers\MakeArray;
+use ShabuShabu\PostGIS\Expressions\Helpers\ArrayToJson;
+use ShabuShabu\PostGIS\Expressions\Position\MinLatitude;
+use ShabuShabu\PostGIS\Expressions\Position\MaxLatitude;
+use ShabuShabu\PostGIS\Expressions\Position\MinLongitude;
+use ShabuShabu\PostGIS\Expressions\Position\MaxLongitude;
+
+DB::query()
+    ->select([
+        new Alias(new AsJson(new ArrayToJson(new MakeArray([
+            new Round(new AsNumeric(new MinLongitude('bbox')), 9),
+            new Round(new AsNumeric(new MinLatitude('bbox')), 9),
+            new Round(new AsNumeric(new MaxLongitude('bbox')), 9),
+            new Round(new AsNumeric(new MaxLatitude('bbox')), 9),
+        ]))), 'bbox')
+    ])
+    ->from(
+        Track::query()->select([
+            new Alias(new TwoD(new Envelope(new Collect('geom'))), 'bbox')
+        ]), 't'
+    );
 ```
 
 ### Migration examples
