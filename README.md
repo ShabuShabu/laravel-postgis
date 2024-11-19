@@ -186,6 +186,41 @@ Schema::create('provinces', static function (Blueprint $table) {
 });
 ```
 
+### Model Casts
+
+You can cast your geometry columns to their respective `\Brick\Geo\Geometry` counterparts. Here's an example:
+
+```php
+use Brick\Geo\Point;
+use ShabuShabu\PostGIS\Casts\Geometry;
+use Illuminate\Database\Eloquent\Model;
+
+class Location extends Model
+{
+    // ...
+    
+    protected function casts(): array
+    {
+        return [
+            'point' => Geometry::using(Point::class),
+        ];
+    }
+}
+```
+
+### Brick/Geo Integration
+
+All the necessary wiring to use `brick/geo` with PostGIS is already done for you. You can just resolve `ShabuShabu\PostGIS\Geometry` from the container:
+
+```php
+use Brick\Geo\Polygon;
+use ShabuShabu\PostGIS\Geometry;
+
+echo app(Geometry::class)->area(
+    Polygon::fromText('POLYGON ((0 0, 0 3, 3 3, 0 0))')
+);
+```
+
 ## Testing
 
 ```bash

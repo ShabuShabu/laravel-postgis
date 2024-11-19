@@ -22,7 +22,7 @@ class PostGISServiceProvider extends PackageServiceProvider
 
     public function registeringPackage(): void
     {
-        $this->app->bind(
+        $this->app->scoped(
             Geometry::class,
             fn (Application $app) => new Geometry(
                 $app->make('db.connection')->getPdo()
