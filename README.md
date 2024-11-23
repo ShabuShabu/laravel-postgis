@@ -211,7 +211,7 @@ class Location extends Model
 ### Brick/Geo Integration
 
 All the necessary wiring to use `brick/geo` with PostGIS is already done for you. You can just resolve `ShabuShabu\PostGIS\Geometry` from the container:
-
+ 
 ```php
 use Brick\Geo\Polygon;
 use ShabuShabu\PostGIS\Geometry;
