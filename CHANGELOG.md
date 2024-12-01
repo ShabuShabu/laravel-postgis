@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.5.0 (2024-12-01)
+
+
+### Features
+
+* added a decode helper expression ([1abfcb5](https://github.com/ShabuShabu/laravel-postgis/commits/1abfcb57d77e41d27009a8b8fd29e609b72addd7))
+* added model geometry casts ([d9095d1](https://github.com/ShabuShabu/laravel-postgis/commits/d9095d1f8f4734880af025b706778690604b4a69))
+
 ## 0.4.0 (2024-11-09)
 
 
