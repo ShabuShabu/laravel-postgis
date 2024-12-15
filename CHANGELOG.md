@@ -2,15 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-### 0.5.1 (2024-12-15)
+### 0.5.2 (2024-12-15)
 
+### Features
+
+* added an expression to extract geometries from a collection ([a3fbb5a](https://github.com/ShabuShabu/laravel-postgis/commits/a3fbb5a2ee605634878cbf5d564a352588190f10))
+
+### 0.5.1 (2024-12-15)
 
 ### Bug Fixes
 
 * cast would panic for nullable fields ([bed7b95](https://github.com/ShabuShabu/laravel-postgis/commits/bed7b955189b72a636630ed0a5f6ac719aa8803c))
 
 ## 0.5.0 (2024-12-01)
-
 
 ### Features
 
@@ -19,25 +23,21 @@ All notable changes to this project will be documented in this file. See [standa
 
 ## 0.4.0 (2024-11-09)
 
-
 ### Features
 
 * added various gis expressions and helpers ([a3b0812](https://github.com/ShabuShabu/laravel-postgis/commits/a3b08126714d3b69e66292e255ddbc93444be361))
 
 ## 0.3.0 (2024-07-21)
 
-
 ### Features
 
 * added expression to generate random points ([12781c0](https://github.com/ShabuShabu/laravel-postgis/commits/12781c0ff4a4702782a219720269c177843abd2e))
-
 
 ## 0.2.0 (2024-07-01)
 
 * small improvements to MakePoint
 
 ### 0.1.0 (2024-06-29)
-
 
 ### Features
 
