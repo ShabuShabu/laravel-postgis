@@ -23,3 +23,9 @@ it('casts a model attribute to a brick geometry', function () {
         ->x()->toBe(75.93305977107549)
         ->y()->toBe(17.62541518363502);
 });
+
+it('does not cast a null value', function () {
+    $user = User::factory()->create(['geom' => null]);
+
+    expect($user->geom)->toBeNull();
+});

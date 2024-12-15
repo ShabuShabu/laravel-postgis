@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.5.1 (2024-12-15)
+
+
+### Bug Fixes
+
+* cast would panic for nullable fields ([bed7b95](https://github.com/ShabuShabu/laravel-postgis/commits/bed7b955189b72a636630ed0a5f6ac719aa8803c))
+
 ## 0.5.0 (2024-12-01)
 
 

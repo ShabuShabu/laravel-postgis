@@ -25,9 +25,13 @@ class Geometry implements CastsAttributes
             throw new RuntimeException("Geometry class $this->class does not exist");
         }
 
-        return ! $value instanceof $this->class
+        if ($value instanceof $this->class) {
+            return $value;
+        }
+
+        return is_string($value)
             ? (new EWKBReader)->read(hex2bin($value))
-            : $value;
+            : null;
     }
 
     /**
