@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.6.1 (2024-12-18)
+
+### Bug Fixes
+
+* ensure only null values are dropped ([47c6c2b](https://github.com/ShabuShabu/laravel-postgis/commits/47c6c2bd6045591a94d20350b2744accf1404e1d))
+
 ## 0.6.0 (2024-12-18)
 
 ### Features
