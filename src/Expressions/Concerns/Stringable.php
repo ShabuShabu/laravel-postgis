@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ShabuShabu\PostGIS\Expressions\Concerns;
 
 use Illuminate\Contracts\Database\Query\Expression;
+use Illuminate\Database\Grammar;
 use Tpetry\QueryExpressions\Concerns\StringizeExpression;
 use Tpetry\QueryExpressions\Value\Number;
 
@@ -29,5 +30,26 @@ trait Stringable
             true => 'true',
             false => 'false',
         };
+    }
+
+    protected function cast(Grammar $grammar, float | int | string | null | bool $value): ?string
+    {
+        return match (true) {
+            is_float($value),
+            is_int($value) => (string) $value,
+            is_null($value) => null,
+            is_string($value) => $grammar->escape($value),
+            is_bool($value) => $this->asBool($value),
+        };
+    }
+
+    protected function toParams(array $params): string
+    {
+        return collect($params)
+            ->filter()
+            ->map(function (string $value, string $key) {
+                return "$key => $value";
+            })
+            ->implode(', ');
     }
 }
