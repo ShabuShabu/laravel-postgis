@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.6.2 (2024-12-18)
+
+### Bug Fixes
+
+* removed named postgis params ([4cc451a](https://github.com/ShabuShabu/laravel-postgis/commits/4cc451a89ccbe5d4fdad508f3a04b86de393920c))
+
 ### 0.6.1 (2024-12-18)
 
 ### Bug Fixes
