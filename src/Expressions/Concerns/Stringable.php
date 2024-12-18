@@ -46,10 +46,8 @@ trait Stringable
     protected function toParams(array $params): string
     {
         return collect($params)
-            ->filter()
-            ->map(function (string $value, string $key) {
-                return "$key => $value";
-            })
+            ->filter(fn (mixed $value) => ! is_null($value))
+            ->map(fn (string $value, string $key) => "$key => $value")
             ->implode(', ');
     }
 }
