@@ -47,7 +47,6 @@ trait Stringable
     {
         return collect($params)
             ->filter(fn (mixed $value) => ! is_null($value))
-            ->map(fn (string $value, string $key) => "$key => $value")
             ->implode(', ');
     }
 }

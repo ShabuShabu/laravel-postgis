@@ -8,4 +8,4 @@ use ShabuShabu\PostGIS\Expressions\As;
 
 it('returns a binary Mapbox Vector Tile representation')
     ->expect(new As\MVT('mvtgeom.*', 'default'))
-    ->toBeExpression('ST_AsMVT(row => "mvtgeom".*, name => \'default\')');
+    ->toBeExpression('ST_AsMVT("mvtgeom".*, \'default\')');

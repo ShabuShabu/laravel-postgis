@@ -27,11 +27,11 @@ readonly class MVT implements GisExpression
     public function getValue(Grammar $grammar): string
     {
         $params = $this->toParams([
-            'row' => $this->stringize($grammar, $this->row),
-            'name' => $this->cast($grammar, $this->name),
-            'extent' => $this->cast($grammar, $this->extent),
-            'geom_name' => $this->cast($grammar, $this->geomName),
-            'feature_id_name' => $this->cast($grammar, $this->featureIdName),
+            $this->stringize($grammar, $this->row),
+            $this->cast($grammar, $this->name),
+            $this->cast($grammar, $this->extent),
+            $this->cast($grammar, $this->geomName),
+            $this->cast($grammar, $this->featureIdName),
         ]);
 
         return "ST_AsMVT($params)";

@@ -27,13 +27,13 @@ readonly class TileEnvelope implements GisExpression
     public function getValue(Grammar $grammar): string
     {
         $params = $this->toParams([
-            'zoom' => $this->cast($grammar, $this->zoom),
-            'x' => $this->cast($grammar, $this->x),
-            'y' => $this->cast($grammar, $this->y),
-            'bounds' => $this->bounds !== null
+            $this->cast($grammar, $this->zoom),
+            $this->cast($grammar, $this->x),
+            $this->cast($grammar, $this->y),
+            $this->bounds !== null
                 ? $this->stringize($grammar, $this->bounds)
                 : null,
-            'margin' => $this->cast($grammar, $this->margin),
+            $this->cast($grammar, $this->margin),
         ]);
 
         return "ST_TileEnvelope($params)";
