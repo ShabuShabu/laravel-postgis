@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 0.6.0 (2024-12-18)
+
+### Features
+
+* added some tile-related expressions ([b1808d0](https://github.com/ShabuShabu/laravel-postgis/commits/b1808d050232cbe4d653aa852f6d1a2800dd76ed))
+
 ### 0.5.2 (2024-12-15)
 
 ### Features
