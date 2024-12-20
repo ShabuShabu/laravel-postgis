@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.6.3 (2024-12-20)
+
+### Features
+
+* added an expression to make an envelope ([5f270f3](https://github.com/ShabuShabu/laravel-postgis/commits/5f270f39df70f41962e4d3c53b6e0cc9c864574f))
+
 ### 0.6.2 (2024-12-18)
 
 ### Bug Fixes

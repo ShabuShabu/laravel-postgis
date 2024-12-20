@@ -186,6 +186,92 @@ Schema::create('provinces', static function (Blueprint $table) {
 });
 ```
 
+### Creating a Mapbox Vector Tile server
+
+Atm, Laravel PostGIS does not ship with it's own MVT server. While we plan to add this one eventually, you can already create your own using the available PostGIS expressions!
+
+Here's an example for a `Country` model:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers\Services;
+
+use App\Models\Country;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use ShabuShabu\PostGIS\Expressions\As;
+use Tpetry\QueryExpressions\Language\Alias;
+use ShabuShabu\PostGIS\Expressions\Simplify;
+use ShabuShabu\PostGIS\Expressions\Transform;
+use ShabuShabu\PostGIS\Expressions\TileEnvelope;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
+class CountryTiles extends Controller
+{
+    public function __invoke(int $z, int $x, int $y): StreamedResponse
+    {
+        $stream = DB::query()
+            ->withExpression(
+                'mvtgeom',
+                DB::query()
+                    ->select([
+                        new Alias(
+                            new As\MvtGeom(
+                                new Transform('t.geom', 3857),
+                                new TileEnvelope($z, $x, $y),
+                            ),
+                            'geom',
+                        ),
+                        't.id',
+                        't.name',
+                    ])
+                    ->from(
+                        Country::query()->select([
+                            new Alias(new Simplify('geom', 0.1), 'geom'),
+                            'id',
+                            'name',
+                        ]),
+                        't'
+                    )
+            )
+            ->select(new Alias(new As\MVT('mvtgeom.*', 'countries'), 'pbf'))
+            ->from('mvtgeom')
+            ->value('pbf');
+
+        abort_unless(is_resource($stream), Response::HTTP_NOT_FOUND);
+
+        defer(static fn () => fclose($stream));
+
+        return response()->stream(function () use ($stream) {
+            while (! feof($stream) && connection_status() === 0) {
+                echo fread($stream, 8192);
+                ob_flush();
+                flush();
+            }
+        }, Response::HTTP_OK, [
+            'Content-Type' => 'application/vnd.mapbox-vector-tile',
+        ]);
+    }
+}
+```
+
+In a real-world scenario, you will most likely want to make this controller much more dynamic!
+
+You can then pass the URL for this controller straight to Mapbox or any other service supporting MVTs. Something like this:
+
+```js
+map.addSource('countries', {
+    type: 'vector',
+    tiles: ['https://your-site.com/tiles/countries/{z}/{x}/{y}.pbf'],
+    minzoom: 0,
+    maxzoom: 16,
+})
+```
+
 ### Model Casts
 
 You can cast your geometry columns to their respective `\Brick\Geo\Geometry` counterparts. Here's an example:
