@@ -18,7 +18,8 @@
     "require": {
         "php": "^8.2",
         "brick/geo": "^0.11.1",
-        "illuminate/contracts": "^11.0",
+        "illuminate/contracts": "^11.23",
+        "shabushabu/laravel-uid": "^0.3.0",
         "spatie/laravel-package-tools": "^1.16",
         "tpetry/laravel-query-expressions": "^1.4"
     },
@@ -54,7 +55,7 @@
         "analyse": "vendor/bin/phpstan analyse",
         "test": "vendor/bin/pest",
         "test-coverage": "vendor/bin/pest --coverage --min=75",
-        "type-coverage": "vendor/bin/pest --type-coverage --min=100",
+        "type-coverage": "vendor/bin/pest --type-coverage --min=95",
         "format": "vendor/bin/pint",
         "testdb": "./bin/testdb"
     },

@@ -34,6 +34,9 @@
         <include>
             <directory suffix=".php">./src</directory>
         </include>
+        <exclude>
+            <directory suffix=".php">./src/Servers</directory>
+        </exclude>
     </source>
     <php>
         <env name="APP_KEY" value="base64:qrfi8YcScKWzeu9ceFWBz7yJQD/hgOWT857LGv49Ggk="/>

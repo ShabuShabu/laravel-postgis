@@ -1,0 +1,89 @@
+<?php
+
+declare(strict_types=1);
+
+namespace ShabuShabu\PostGIS\Servers\Tiles;
+
+use BackedEnum;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use ShabuShabu\PostGIS\Expressions\As;
+use ShabuShabu\PostGIS\Expressions\Intersects;
+use ShabuShabu\PostGIS\Expressions\Position\MakeEnvelope;
+use ShabuShabu\PostGIS\Expressions\TileEnvelope;
+use ShabuShabu\PostGIS\Expressions\Transform;
+use ShabuShabu\PostGIS\Servers\Tiles\Contracts\GetsMVTStream;
+use ShabuShabu\PostGIS\Servers\Tiles\Contracts\Sourceable;
+use Tpetry\QueryExpressions\Language\Alias;
+
+class GetMVTStream implements GetsMVTStream
+{
+    public function __invoke(Sourceable $source, int $z, int $x, int $y): mixed
+    {
+        if ($this->isInvalidTile($z, $x, $y)) {
+            return false;
+        }
+
+        $name = ($key = $source->name()) instanceof BackedEnum
+            ? $key->value
+            : $key;
+
+        return DB::query()
+            ->withExpression(
+                'mvtgeom',
+                DB::query()
+                    ->select([
+                        new Alias(
+                            new As\MVTGeom(
+                                new Transform('t.geom', 3857),
+                                new TileEnvelope($z, $x, $y),
+                            ),
+                            'geom',
+                        ),
+                        ...array_map(
+                            static fn (string $column) => Str::start($column, 't.'),
+                            array_values(
+                                array_unique(['id', ...$source->columns()])
+                            )
+                        ),
+                    ])
+                    ->from(
+                        $source->query()->where(
+                            new Intersects('geom', $this->envelope($z, $x, $y)),
+                            true,
+                        ),
+                        't'
+                    )
+            )
+            ->select(new Alias(new As\MVT('mvtgeom.*', $name), 'pbf'))
+            ->from('mvtgeom')
+            ->value('pbf');
+    }
+
+    protected function isInvalidTile(int $z, int $x, int $y): bool
+    {
+        return $x < 0 || $x >= 2 ** $z || $y < 0 || $y >= 2 ** $z;
+    }
+
+    /**
+     * @see https://github.com/pramsey/minimal-mvt/blob/8b736e342ada89c5c2c9b1c77bfcbcfde7aa8d82/minimal-mvt.py#L64-L81
+     */
+    protected function envelope(int $z, int $x, int $y): Transform
+    {
+        $worldMax = 20037508.3427892;
+        $worldMin = -1 * $worldMax;
+        $worldSize = $worldMax - $worldMin;
+
+        // in EPSG:3857
+        $tileWidth = $worldSize / (2 ** $z);
+
+        // Calculate geographic bounds from tile coordinates
+        return new Transform(new MakeEnvelope(
+            xmin: $worldMin + $tileWidth * $x,
+            ymin: $worldMax - $tileWidth * ($y + 1),
+            xmax: $worldMin + $tileWidth * ($x + 1),
+            ymax: $worldMax - $tileWidth * $y,
+            srid: 3857,
+        ), 4326);
+    }
+}
