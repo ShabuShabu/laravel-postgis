@@ -19,7 +19,7 @@ class GetGeoJson implements GetsGeoJson
         $select = collect($model->geoJsonColumns())->map(
             fn (string | Expression $alias, string | int $column) => match (true) {
                 $alias instanceof Expression => $alias,
-                is_int($column) && is_string($alias) => new Alias($alias, Str::studly($alias)),
+                is_int($column) && is_string($alias) => new Alias($alias, Str::camel($alias)),
                 default => new Alias($column, $alias),
             }
         )->values()->all();
