@@ -58,7 +58,7 @@ return [
         |
         | Change the route prefix for the tile server URL here. By default, this
         | will generate URLs like so:
-        | `https://your-site.com/services/tiles/{source}/{z}/{x}/{y}.pbf`
+        | `https://your-site.com/services/tiles/{sourceName}/{z}/{x}/{y}.pbf`
         |
         */
         'route_prefix' => 'services/tiles',
