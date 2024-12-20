@@ -31,8 +31,8 @@ class PostGISServiceProvider extends PackageServiceProvider
 
     public function registeringPackage(): void
     {
-        $this->app->alias(GetsMVTStream::class, GetMVTStream::class);
-        $this->app->alias(GetsGeoJson::class, GetGeoJson::class);
+        $this->app->bind(GetsMVTStream::class, GetMVTStream::class);
+        $this->app->bind(GetsGeoJson::class, GetGeoJson::class);
 
         $this->app->scoped(
             SourceManager::class,
