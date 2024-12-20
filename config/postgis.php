@@ -3,6 +3,16 @@
 declare(strict_types=1);
 
 return [
+    /*
+    |--------------------------------------------------------------------------
+    | The domain the servers are gonna run in
+    |--------------------------------------------------------------------------
+    |
+    | Leave empty if you do not want to specify a domain.
+    |
+    */
+    'server_domain' => env('POSTGIS_SERVER_DOMAIN', ''),
+
     'tiles' => [
         /*
         |--------------------------------------------------------------------------
