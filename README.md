@@ -320,7 +320,7 @@ map.addSource('countries', {
 })
 ```
 
-### Feature Server
+### GeoJson Feature Server
 
 > [!CAUTION]
 > Please note that atm you will need to install the `develop` branch to use this feature! This feature is not currently covered by any tests, so use at your own risk.
