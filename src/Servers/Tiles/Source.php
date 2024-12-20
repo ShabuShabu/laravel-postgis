@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace ShabuShabu\PostGIS\Servers\Tiles;
 
 use Illuminate\Http\Request;
+use ShabuShabu\PostGIS\Servers\Tiles\Contracts\Sourceable;
 
-trait UsesRequest
+abstract class Source implements Sourceable
 {
     protected ?Request $request = null;
 
