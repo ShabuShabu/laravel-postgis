@@ -11,7 +11,7 @@ Select collection of Laravel query expressions for PostGIS.
 
 | PHP | Laravel | PostgreSQL | PostGIS |
 |-----|---------|------------|---------|
-| 8.2 | 11.0    | 16         | 3.4     |
+| 8.2 | 11.23   | 16         | 3.4     |
 
 ## Installation
 
@@ -306,6 +306,133 @@ echo app(Geometry::class)->area(
     Polygon::fromText('POLYGON ((0 0, 0 3, 3 3, 0 0))')
 );
 ```
+
+### Mapbox Vector Tile Server
+
+> [!CAUTION]
+> Please note that atm you will need to install the `develop` branch to use this feature! This feature is not currently covered by any tests, so use at your own risk.
+
+#### Add a gate
+
+You will need to add a gate to the `boot` method of your `AppServiceProvider` to ensure that only certain users can use the tile server:
+
+```php
+Gate::define(
+    'access-tile-server',
+    static fn (User $user) => $user->is_admin,
+);
+```
+
+#### Create sources
+
+The next step is to create sources for all your MVTs. All sources need to extend the `ShabuShabu\PostGIS\Servers\Tiles\Source` class.
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services\MVT;
+
+use BackedEnum;
+use App\Models\Country;
+use ShabuShabu\PostGIS\Servers\Tiles\Source;
+use Tpetry\QueryExpressions\Language\Alias;
+use ShabuShabu\PostGIS\Expressions\Simplify;
+use Illuminate\Contracts\Database\Query\Builder;
+
+class Countries extends Source
+{
+    public function name(): string | BackedEnum
+    {
+        return 'countries';
+    }
+
+    public function query(): Builder
+    {
+        return Country::query()->select([
+            'id',
+            new Alias(new Simplify('geom', 0.1), 'geom'),
+            new Alias('name', 'title'),
+            'code',
+        ]);
+    }
+
+    public function columns(): array
+    {
+        return ['title', 'code'];
+    }
+}
+```
+
+The `name` method must return a unique name identifying the source. This value will also be used as the name for the layer within the MVT.
+
+The `query` method must return an `id` and a `geom` column, plus any optional columns you need for display.
+
+Finally, the `columns` method should return all the optional column names.
+
+#### Add sources to the config file
+
+The last required step is to add your sources to the config file:
+
+```php
+return [
+    'tiles' => [
+        // other values...
+        
+        'sources' => [
+            \App\Services\MVT\Countries::class,
+        ],
+        
+        // other values...
+    ],   
+];
+```
+
+#### Additional Steps
+
+Optionally, you can also adjust the route settings in the config file, like setting middleware, changing the route prefix or rolling your own setup!
+
+### Feature Server
+
+> [!CAUTION]
+> Please note that atm you will need to install the `develop` branch to use this feature! This feature is not currently covered by any tests, so use at your own risk.
+
+#### Add a gate
+
+You will need to add a gate to the `boot` method of your `AppServiceProvider` to ensure that only certain users can use the feature server:
+
+```php
+Gate::define(
+    'access-feature-server',
+    static fn (User $user) => $user->is_admin,
+);
+```
+
+#### Add UIDs to any models
+
+The feature server makes use of globally unique IDs via our [UIDs for Laravel](https://github.com/ShabuShabu/laravel-uid) package.
+
+Please follow the installation instruction there to set up UIDs for your feature-enabled models!
+
+#### Add the Geomable interface to any models
+
+Additionally, any feature-enabled models need to implement the `ShabuShabu\PostGIS\Servers\Features\Contracts\Geomable` interface.
+
+The `geoJsonColumns` method should return an array of column strings or query expressions. These will be added to the GeoJson response as properties:
+
+```php
+return [
+    new Alias('continent_id', 'continent'),
+    'name',
+    'description',
+    'slug',
+];
+```
+
+#### Additional Steps
+
+Optionally, you can also adjust the route settings in the config file, like setting middleware, changing the route prefix or rolling your own setup!
 
 ## Testing
 
