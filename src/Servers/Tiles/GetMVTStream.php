@@ -72,10 +72,9 @@ class GetMVTStream implements GetsMVTStream
     {
         $worldMax = 20037508.3427892;
         $worldMin = -1 * $worldMax;
-        $worldSize = $worldMax - $worldMin;
 
         // in EPSG:3857
-        $tileWidth = $worldSize / (2 ** $z);
+        $tileWidth = ($worldMax - $worldMin) / (2 ** $z);
 
         // Calculate geographic bounds from tile coordinates
         return new Transform(new MakeEnvelope(
