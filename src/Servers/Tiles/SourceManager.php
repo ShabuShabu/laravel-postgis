@@ -12,6 +12,11 @@ class SourceManager
 {
     protected array $sources = [];
 
+    public function isSource(BackedEnum | string $name): bool
+    {
+        return array_key_exists($this->key($name), $this->sources);
+    }
+
     public function source(BackedEnum | string $name): Sourceable
     {
         $key = $this->key($name);

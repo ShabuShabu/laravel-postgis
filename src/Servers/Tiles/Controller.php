@@ -13,13 +13,21 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class Controller
 {
-    public function __invoke(Request $request, SourceManager $manager, GetsMVTStream $getMvtStream, string $sourceName, int $z, int $x, int $y): StreamedResponse
+    public function __invoke(Request $request, SourceManager $manager, GetsMVTStream $getMvtStream, string $sourceNames, int $z, int $x, int $y): StreamedResponse
     {
-        Gate::authorize('access-tile-server', [$sourceName]);
+        $names = array_map('trim', explode(',', $sourceNames));
 
-        $source = $manager->source($sourceName)->request($request);
+        Gate::authorize('access-tile-server', [$names]);
 
-        $stream = $getMvtStream($source, $z, $x, $y);
+        $sources = collect($names)->filter(
+            static fn (string $name) => $manager->isSource($name)
+        )->values()->map(
+            static fn (string $name) => $manager->source($name)->request($request)
+        );
+
+        abort_if($sources->isEmpty(), Response::HTTP_NO_CONTENT);
+
+        $stream = $getMvtStream($sources, $z, $x, $y);
 
         // We return a 204 here to avoid being overrun by console errors
         abort_unless(is_resource($stream), Response::HTTP_NO_CONTENT);

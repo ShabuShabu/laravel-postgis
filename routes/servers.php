@@ -9,7 +9,7 @@ use ShabuShabu\PostGIS\Servers\Tiles;
 Route::domain(config('postgis.server_domain'))->group(function () {
     if (config('postgis.tiles.enabled') && ! config('postgis.tiles.disable_default_route')) {
         Route::middleware(config('postgis.tiles.middleware'))->group(function () {
-            Route::get(config('postgis.tiles.route_prefix') . '/{sourceName}/{z}/{x}/{y}.pbf', Tiles\Controller::class)
+            Route::get(config('postgis.tiles.route_prefix') . '/{sourceNames}/{z}/{x}/{y}.pbf', Tiles\Controller::class)
                 ->name('tile-server');
         });
     }

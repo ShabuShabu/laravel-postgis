@@ -320,6 +320,12 @@ map.addSource('countries', {
 })
 ```
 
+To request multiple layers, just comma-separate them:
+
+```
+https://your-site.com/services/tiles/countries,provinces/{z}/{x}/{y}.pbf
+```
+
 ### GeoJson Feature Server
 
 > [!CAUTION]

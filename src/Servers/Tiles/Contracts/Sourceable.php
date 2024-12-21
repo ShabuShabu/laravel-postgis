@@ -14,6 +14,8 @@ interface Sourceable
 
     public function name(): string | BackedEnum;
 
+    public function layer(): string;
+
     public function query(): Builder;
 
     public function columns(): array;

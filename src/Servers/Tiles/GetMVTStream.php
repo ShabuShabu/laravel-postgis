@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace ShabuShabu\PostGIS\Servers\Tiles;
 
-use BackedEnum;
+use Illuminate\Contracts\Database\Query\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use ShabuShabu\PostGIS\Expressions\As;
+use ShabuShabu\PostGIS\Expressions\Helpers\StringAgg;
 use ShabuShabu\PostGIS\Expressions\Intersects;
 use ShabuShabu\PostGIS\Expressions\Position\MakeEnvelope;
 use ShabuShabu\PostGIS\Expressions\TileEnvelope;
@@ -18,46 +20,56 @@ use Tpetry\QueryExpressions\Language\Alias;
 
 class GetMVTStream implements GetsMVTStream
 {
-    public function __invoke(Sourceable $source, int $z, int $x, int $y): mixed
+    public function __invoke(Collection $sources, int $z, int $x, int $y): mixed
     {
         if ($this->isInvalidTile($z, $x, $y)) {
             return false;
         }
 
-        $name = ($key = $source->name()) instanceof BackedEnum
-            ? $key->value
-            : $key;
+        $first = $sources->pull(0);
 
         return DB::query()
-            ->withExpression(
-                'mvtgeom',
-                DB::query()
-                    ->select([
-                        new Alias(
-                            new As\MVTGeom(
-                                new Transform('t.geom', 3857),
-                                new TileEnvelope($z, $x, $y),
-                            ),
-                            'geom',
-                        ),
-                        ...array_map(
-                            static fn (string $column) => Str::start($column, 't.'),
-                            array_values(
-                                array_unique(['id', ...$source->columns()])
-                            )
-                        ),
-                    ])
-                    ->from(
-                        $source->query()->where(
-                            new Intersects('geom', $this->envelope($z, $x, $y)),
-                            true,
-                        ),
-                        't'
-                    )
+            ->select(new Alias(new StringAgg('p.mvt'), 'pbf'))
+            ->from(
+                $sources->reduce(
+                    fn (Builder $builder, Sourceable $source) => $builder->union(
+                        $this->query($source, $z, $x, $y)
+                    ),
+                    $this->query($first, $z, $x, $y)
+                ),
+                'p'
             )
-            ->select(new Alias(new As\MVT('mvtgeom.*', $name), 'pbf'))
-            ->from('mvtgeom')
             ->value('pbf');
+    }
+
+    protected function query(Sourceable $source, int $z, int $x, int $y): Builder
+    {
+        return DB::query()
+            ->select(new Alias(new As\MVT('mvtgeom.*', $source->layer()), 'mvt'))
+            ->from(
+                DB::query()->select([
+                    new Alias(
+                        new As\MVTGeom(
+                            new Transform('t.geom', 3857),
+                            new TileEnvelope($z, $x, $y),
+                        ),
+                        'geom',
+                    ),
+                    ...array_map(
+                        static fn (string $column) => Str::start($column, 't.'),
+                        array_values(
+                            array_unique(['id', ...$source->columns()])
+                        )
+                    ),
+                ])->from(
+                    $source->query()->where(
+                        new Intersects('geom', $this->envelope($z, $x, $y)),
+                        true,
+                    ),
+                    't'
+                ),
+                'mvtgeom'
+            );
     }
 
     protected function isInvalidTile(int $z, int $x, int $y): bool
