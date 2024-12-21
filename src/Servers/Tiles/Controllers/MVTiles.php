@@ -2,27 +2,28 @@
 
 declare(strict_types=1);
 
-namespace ShabuShabu\PostGIS\Servers\Tiles;
+namespace ShabuShabu\PostGIS\Servers\Tiles\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
 use ShabuShabu\PostGIS\Servers\Mime;
 use ShabuShabu\PostGIS\Servers\Tiles\Contracts\GetsMVTStream;
+use ShabuShabu\PostGIS\Servers\Tiles\Manager;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-class Controller
+class MVTiles
 {
-    public function __invoke(Request $request, SourceManager $manager, GetsMVTStream $getMvtStream, string $sourceNames, int $z, int $x, int $y): StreamedResponse
+    public function __invoke(Request $request, Manager $manager, GetsMVTStream $getMvtStream, string $sourceNames, int $z, int $x, int $y): StreamedResponse
     {
         $names = array_map('trim', explode(',', $sourceNames));
 
         Gate::authorize('access-tile-server', [$names]);
 
         $sources = collect($names)->filter(
-            static fn (string $name) => $manager->isSource($name)
+            static fn (string $name) => $manager->has($name)
         )->values()->map(
-            static fn (string $name) => $manager->source($name)->request($request)
+            static fn (string $name) => $manager->get($name)->request($request)
         );
 
         abort_if($sources->isEmpty(), Response::HTTP_NO_CONTENT);

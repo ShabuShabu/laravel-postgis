@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace ShabuShabu\PostGIS;
 
 use Illuminate\Foundation\Application;
-use ShabuShabu\PostGIS\Servers\Features\Contracts\GetsGeoJson;
-use ShabuShabu\PostGIS\Servers\Features\GetGeoJson;
+use ShabuShabu\PostGIS\Servers\Features;
+use ShabuShabu\PostGIS\Servers\Features\Actions\GetFeatureCollection;
+use ShabuShabu\PostGIS\Servers\Features\Actions\GetModelGeoJson;
+use ShabuShabu\PostGIS\Servers\Features\Contracts\GetsFeatureCollection;
+use ShabuShabu\PostGIS\Servers\Features\Contracts\GetsModelGeoJson;
+use ShabuShabu\PostGIS\Servers\Tiles;
+use ShabuShabu\PostGIS\Servers\Tiles\Actions\GetMVTStream;
 use ShabuShabu\PostGIS\Servers\Tiles\Contracts\GetsMVTStream;
-use ShabuShabu\PostGIS\Servers\Tiles\GetMVTStream;
-use ShabuShabu\PostGIS\Servers\Tiles\SourceManager;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -32,15 +35,26 @@ class PostGISServiceProvider extends PackageServiceProvider
     public function registeringPackage(): void
     {
         $this->app->bind(GetsMVTStream::class, GetMVTStream::class);
-        $this->app->bind(GetsGeoJson::class, GetGeoJson::class);
+        $this->app->bind(GetsModelGeoJson::class, GetModelGeoJson::class);
+        $this->app->bind(GetsFeatureCollection::class, GetFeatureCollection::class);
 
         $this->app->scoped(
-            SourceManager::class,
+            Tiles\Manager::class,
             fn (Application $app) => collect(
                 $app->make('config')->get('postgis.tiles.sources', [])
             )->reduce(
-                fn (SourceManager $manager, string $source) => $manager->addSource(new $source),
-                new SourceManager
+                fn (Tiles\Manager $manager, string $source) => $manager->addSource(new $source),
+                new Tiles\Manager
+            )
+        );
+
+        $this->app->scoped(
+            Features\Manager::class,
+            fn (Application $app) => collect(
+                $app->make('config')->get('postgis.features.collections', [])
+            )->reduce(
+                fn (Features\Manager $manager, string $collection) => $manager->addCollection(new $collection),
+                new Features\Manager
             )
         );
 

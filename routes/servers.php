@@ -9,14 +9,17 @@ use ShabuShabu\PostGIS\Servers\Tiles;
 Route::domain(config('postgis.server_domain'))->group(function () {
     if (config('postgis.tiles.enabled') && ! config('postgis.tiles.disable_default_route')) {
         Route::middleware(config('postgis.tiles.middleware'))->group(function () {
-            Route::get(config('postgis.tiles.route_prefix') . '/{sourceNames}/{z}/{x}/{y}.pbf', Tiles\Controller::class)
+            Route::get(config('postgis.tiles.route_prefix') . '/{sourceNames}/{z}/{x}/{y}.pbf', Tiles\Controllers\MVTiles::class)
                 ->name('tile-server');
         });
     }
 
-    if (config('postgis.features.enabled') && ! config('postgis.features.disable_default_route')) {
+    if (config('postgis.features.enabled') && ! config('postgis.features.disable_default_routes')) {
         Route::middleware(config('postgis.features.middleware'))->group(function () {
-            Route::get(config('postgis.features.route_prefix') . '/{uid}.geojson', Features\Controller::class)
+            Route::get(config('postgis.features.route_prefix') . '/collections/{collectionName}.geojson', Features\Controllers\Collection::class)
+                ->name('collection-server');
+
+            Route::get(config('postgis.features.route_prefix') . '/{uid}.geojson', Features\Controllers\Feature::class)
                 ->name('feature-server');
         });
     }

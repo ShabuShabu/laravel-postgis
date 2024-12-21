@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace ShabuShabu\PostGIS\Servers\Features;
+namespace ShabuShabu\PostGIS\Servers\Features\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use ShabuShabu\PostGIS\Servers\Features\Contracts\Geomable;
-use ShabuShabu\PostGIS\Servers\Features\Contracts\GetsGeoJson;
+use ShabuShabu\PostGIS\Servers\Features\Contracts\GetsModelGeoJson;
 use ShabuShabu\PostGIS\Servers\Mime;
 use ShabuShabu\Uid\Service\Uid;
 use Throwable;
 
-class Controller
+class Feature
 {
-    public function __invoke(GetsGeoJson $getGeoJson, string $uid): JsonResponse
+    public function __invoke(GetsModelGeoJson $getGeoJson, string $uid): JsonResponse
     {
         try {
             $model = Uid::make()->decodeToModel($uid);

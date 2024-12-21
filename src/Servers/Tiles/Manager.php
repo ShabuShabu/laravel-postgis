@@ -8,16 +8,16 @@ use BackedEnum;
 use RuntimeException;
 use ShabuShabu\PostGIS\Servers\Tiles\Contracts\Sourceable;
 
-class SourceManager
+class Manager
 {
     protected array $sources = [];
 
-    public function isSource(BackedEnum | string $name): bool
+    public function has(BackedEnum | string $name): bool
     {
         return array_key_exists($this->key($name), $this->sources);
     }
 
-    public function source(BackedEnum | string $name): Sourceable
+    public function get(BackedEnum | string $name): Sourceable
     {
         $key = $this->key($name);
 

@@ -64,7 +64,7 @@ DB::query()
     ->select([
         new Alias(new JsonBuildObject([
             'type'     => 'FeatureCollection',
-            'features' => new JsonAgg(new AsJson(new As\GeoJson('m.*', null, null)))
+            'features' => new JsonAgg(new AsJson(new As\GeoJson('t.*', null, null)))
         ]), 'features')
     ])
     ->from(
@@ -239,7 +239,7 @@ Gate::define(
 
 #### Create sources
 
-The next step is to create sources for all your MVTs. All sources need to extend the `ShabuShabu\PostGIS\Servers\Tiles\Source` class.
+The next step is to create sources for all your MVTs. All sources should extend the `ShabuShabu\PostGIS\Servers\Tiles\Source` class.
 
 ```php
 <?php
@@ -284,6 +284,8 @@ The `name` method must return a unique name identifying the source. This value w
 The `query` method must return an `id` and a `geom` column, plus any optional columns you need for display.
 
 Finally, the `columns` method should return all the optional column names.
+
+Additionally, you also have access to the current request via `$this->request`.
 
 #### Add sources to the config file
 
@@ -374,7 +376,99 @@ Here's an example how you can use the feature server with Mapbox. The server can
 ```js
 map.addSource('geom', {
     type: 'geojson',
-    data: `https://your-site.com/services/feaatures/${uid}.geojson`,
+    data: `https://your-site.com/services/features/${uid}.geojson`,
+    maxzoom: 16
+})
+```
+
+### GeoJson Collection Server
+
+> [!CAUTION]
+> Please note that atm you will need to install the `develop` branch to use this feature! This feature is not currently covered by any tests, so use at your own risk.
+
+#### Add a gate
+
+You will need to add a gate to the `boot` method of your `AppServiceProvider` to ensure that only certain users can use the collection server:
+
+```php
+Gate::define(
+    'access-collection-server',
+    static fn (User $user) => $user->is_admin,
+);
+```
+
+#### Create collections
+
+The next step is to create collections. All collections should extend the `ShabuShabu\PostGIS\Servers\Features\Collection` class.
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services\Features;
+
+use BackedEnum;
+use App\Models\Country;
+use Tpetry\QueryExpressions\Language\Alias;
+use ShabuShabu\PostGIS\Expressions\Simplify;
+use Illuminate\Contracts\Database\Query\Builder;
+use ShabuShabu\PostGIS\Servers\Features\Collection;
+
+class Countries extends Collection
+{
+    public function name(): string | BackedEnum
+    {
+        return 'countries';
+    }
+
+    public function query(): Builder
+    {
+        return Country::query()->select([
+            new Alias(new Simplify('geom', 0.1), 'geom'),
+            'name',
+            'code',
+        ]);
+    }
+}
+```
+
+The `name` method must return a unique name identifying the collection.
+
+The `query` method must return a `geom` column, plus any optional columns you want to pass along as properties.
+
+Additionally, you also have access to the current request via `$this->request`.
+
+#### Add collections to the config file
+
+The last required step is to add your collections to the config file:
+
+```php
+return [
+    'features' => [
+        // other values...
+        
+        'sources' => [
+            \App\Services\Features\Countries::class,
+        ],
+        
+        // other values...
+    ],   
+];
+```
+
+#### Additional Steps
+
+Optionally, you can also adjust the route settings in the config file, like setting middleware, changing the route prefix or rolling your own setup!
+
+#### Integrating the collection server on the frontend
+
+Here's an example how you can use the collection server with Mapbox. The server can be used with any map provider that supports GeoJson, tho.
+
+```js
+map.addSource('geom', {
+    type: 'geojson',
+    data: `https://your-site.com/services/features/collections/${collectionName}.geojson`,
     maxzoom: 16
 })
 ```

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ShabuShabu\PostGIS\Servers\Tiles;
+namespace ShabuShabu\PostGIS\Servers\Tiles\Actions;
 
 use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Support\Collection;

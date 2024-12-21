@@ -31,7 +31,7 @@ return [
         |--------------------------------------------------------------------------
         |
         | Here you need to add all available tile sources. All sources need to
-        | implement the `ShabuShabu\PostGIS\Servers\Tile\Contracts\Sourceable`
+        | implement the `ShabuShabu\PostGIS\Servers\Tiles\Contracts\Sourceable`
         | interface.
         |
         | Here is an example:
@@ -99,14 +99,29 @@ return [
 
         /*
         |--------------------------------------------------------------------------
-        | Disable the default feature route
+        | Collections
         |--------------------------------------------------------------------------
         |
-        | Just a boolean flag if the default route should be disabled. Useful
+        | Here you need to add all available feature collections. All sources need to
+        | implement the `ShabuShabu\PostGIS\Servers\Features\Contracts\Collectable`
+        | interface.
+        |
+        | Here is an example:
+        | `App\Services\Features\CountrySource::class`
+        |
+        */
+        'collections' => [],
+
+        /*
+        |--------------------------------------------------------------------------
+        | Disable the default feature routes
+        |--------------------------------------------------------------------------
+        |
+        | Just a boolean flag if the default routes should be disabled. Useful
         | if you want to run your own setup!
         |
         */
-        'disable_default_route' => false,
+        'disable_default_routes' => false,
 
         /*
         |--------------------------------------------------------------------------

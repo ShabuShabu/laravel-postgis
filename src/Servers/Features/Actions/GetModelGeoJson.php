@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace ShabuShabu\PostGIS\Servers\Features;
+namespace ShabuShabu\PostGIS\Servers\Features\Actions;
 
 use Illuminate\Contracts\Database\Query\Expression;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use ShabuShabu\PostGIS\Expressions\As;
 use ShabuShabu\PostGIS\Servers\Features\Contracts\Geomable;
-use ShabuShabu\PostGIS\Servers\Features\Contracts\GetsGeoJson;
+use ShabuShabu\PostGIS\Servers\Features\Contracts\GetsModelGeoJson;
 use Tpetry\QueryExpressions\Language\Alias;
 
-class GetGeoJson implements GetsGeoJson
+class GetModelGeoJson implements GetsModelGeoJson
 {
     public function __invoke(Geomable $model): string
     {
