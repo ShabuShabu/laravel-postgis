@@ -79,10 +79,10 @@ return [
         |--------------------------------------------------------------------------
         |
         | Here you can specify the cache-control header for the streamed tile
-        | server response.
+        | server response. Set to `null` to disable.
         |
         */
-        'cache_control' => 'max-age=604800',
+        'cache_control' => 'max-age=3600',
     ],
 
     'features' => [

@@ -43,10 +43,10 @@ class MVTiles
                 ob_flush();
                 flush();
             }
-        }, Response::HTTP_OK, [
+        }, Response::HTTP_OK, array_filter([
             'Cache-Control' => config('postgis.tiles.cache_control'),
             'Content-Length' => $stats['size'],
             'Content-Type' => Mime::MVT->value,
-        ]);
+        ]));
     }
 }
