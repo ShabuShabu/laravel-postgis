@@ -19,4 +19,6 @@ interface Sourceable
     public function query(): Builder;
 
     public function columns(): array;
+
+    public function geomIntersectsField(): string;
 }

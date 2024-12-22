@@ -27,4 +27,9 @@ abstract class Source implements Sourceable
             ? $name->value
             : $name;
     }
+
+    public function geomIntersectsField(): string
+    {
+        return 'geom';
+    }
 }

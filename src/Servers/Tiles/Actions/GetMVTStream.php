@@ -63,7 +63,7 @@ class GetMVTStream implements GetsMVTStream
                     ),
                 ])->from(
                     $source->query()->where(
-                        new Intersects('geom', $this->envelope($z, $x, $y)),
+                        new Intersects($source->geomIntersectsField(), $this->envelope($z, $x, $y)),
                         true,
                     ),
                     't'
