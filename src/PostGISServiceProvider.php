@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ShabuShabu\PostGIS;
 
+use Brick\Geo\Engine\PdoEngine;
 use Illuminate\Foundation\Application;
 use ShabuShabu\PostGIS\Servers\Features;
 use ShabuShabu\PostGIS\Servers\Features\Actions\GetFeatureCollection;
@@ -59,8 +60,8 @@ class PostGISServiceProvider extends PackageServiceProvider
         );
 
         $this->app->scoped(
-            Geometry::class,
-            fn (Application $app) => new Geometry(
+            PdoEngine::class,
+            fn (Application $app) => new PdoEngine(
                 $app->make('db.connection')->getPdo()
             )
         );

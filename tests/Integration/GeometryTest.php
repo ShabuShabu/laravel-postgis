@@ -4,12 +4,12 @@
 
 declare(strict_types=1);
 
+use Brick\Geo\Engine\PdoEngine;
 use Brick\Geo\Polygon;
-use ShabuShabu\PostGIS\Geometry;
 
 it('integrates brick/geo', function () {
-    expect(app(Geometry::class))
-        ->toBeInstanceOf(Geometry::class)
+    expect(app(PdoEngine::class))
+        ->toBeInstanceOf(PdoEngine::class)
         ->area(Polygon::fromText('POLYGON ((0 0, 0 3, 3 3, 0 0))'))
         ->toBe(4.5);
 });
