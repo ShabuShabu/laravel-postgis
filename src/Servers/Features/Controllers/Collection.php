@@ -17,11 +17,11 @@ class Collection
 {
     public function __invoke(Request $request, Manager $manager, GetsFeatureCollection $getFeatureCollection, string $collectionName): StreamedJsonResponse
     {
-        Gate::authorize('access-collection-server', [$collectionName]);
-
         abort_unless($manager->has($collectionName), StreamedJsonResponse::HTTP_NOT_FOUND);
 
         $collection = $manager->get($collectionName)->request($request);
+
+        Gate::authorize('access-collection-server', [$collectionName, $collection]);
 
         $get = static fn () => $getFeatureCollection($collection);
 

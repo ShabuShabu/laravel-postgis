@@ -18,13 +18,13 @@ class MVTiles
     {
         $names = array_map('trim', explode(',', $sourceNames));
 
-        Gate::authorize('access-tile-server', [$names]);
-
         $sources = collect($names)->filter(
             static fn (string $name) => $manager->has($name)
         )->values()->map(
             static fn (string $name) => $manager->get($name)->request($request)
         );
+
+        Gate::authorize('access-tile-server', [$names, $sources]);
 
         abort_if($sources->isEmpty(), Response::HTTP_NO_CONTENT);
 
