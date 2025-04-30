@@ -17,6 +17,7 @@ use ShabuShabu\PostGIS\Expressions\Transform;
 use ShabuShabu\PostGIS\Servers\Tiles\Contracts\GetsMVTStream;
 use ShabuShabu\PostGIS\Servers\Tiles\Contracts\Sourceable;
 use Tpetry\QueryExpressions\Language\Alias;
+use Tpetry\QueryExpressions\Value\Value;
 
 class GetMVTStream implements GetsMVTStream
 {
@@ -64,7 +65,7 @@ class GetMVTStream implements GetsMVTStream
                 ])->from(
                     $source->query()->where(
                         new Intersects($source->geomIntersectsField(), $this->envelope($z, $x, $y)),
-                        true,
+                        new Value(true),
                     ),
                     't'
                 ),
