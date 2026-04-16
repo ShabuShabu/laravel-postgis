@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ShabuShabu\PostGIS\Servers\Features\Controllers;
 
+use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
@@ -15,10 +16,14 @@ use Throwable;
 
 class Feature
 {
+    protected static ?Closure $modelResolver = null;
+
     public function __invoke(GetsModelGeoJson $getGeoJson, string $uid): JsonResponse
     {
+        $resolveModel = static::$modelResolver ?? static fn (string $uid) => Uid::make()->decodeToModel($uid);
+
         try {
-            $model = Uid::make()->decodeToModel($uid);
+            $model = $resolveModel($uid);
         } catch (Throwable) {
             $model = false;
         }
@@ -41,5 +46,10 @@ class Feature
             'Content-Type',
             Mime::GEOJSON->value,
         );
+    }
+
+    public static function resolveModelUsing(Closure $modelResolver): void
+    {
+        self::$modelResolver = $modelResolver;
     }
 }
